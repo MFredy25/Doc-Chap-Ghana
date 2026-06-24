@@ -5,77 +5,13 @@ import {
   Mail,
   Phone,
   MessageCircle,
+  Facebook,
+  Instagram,
+  Twitter,
+  Youtube,
+  Music2,
   Clock3,
 } from "lucide-react";
-
-function FacebookIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-      aria-hidden="true"
-    >
-      <path d="M13.5 22v-8h2.7l.4-3h-3.1V9.1c0-.9.3-1.5 1.6-1.5H16.8V4.9c-.3 0-1.3-.1-2.4-.1-2.4 0-4 1.4-4 4.1V11H7.7v3h2.7v8h3.1Z" />
-    </svg>
-  );
-}
-
-function InstagramIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      className={className}
-      aria-hidden="true"
-    >
-      <rect x="3" y="3" width="18" height="18" rx="5" />
-      <circle cx="12" cy="12" r="4" />
-      <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
-
-function XIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-      aria-hidden="true"
-    >
-      <path d="M18.9 2H22l-6.8 7.8L23.2 22h-6.3l-4.9-6.5L6.3 22H3.2l7.3-8.4L2.8 2h6.4L13.6 8 18.9 2Zm-1.1 18h1.7L8.2 3.9H6.4L17.8 20Z" />
-    </svg>
-  );
-}
-
-function TikTokIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-      aria-hidden="true"
-    >
-      <path d="M16.7 3c.3 1.8 1.3 3.2 3.3 3.4v3.1c-1.2 0-2.3-.3-3.3-.9v6.7c0 3.4-2.7 5.7-6 5.7-3.6 0-6.3-3.3-5.8-6.9.4-2.7 2.6-4.7 5.4-4.7.5 0 .9.1 1.3.2v3.2c-.4-.2-.8-.3-1.3-.3-1.4 0-2.5 1.1-2.5 2.5 0 1.7 1.6 2.9 3.2 2.4.9-.3 1.5-1.1 1.5-2.1V3h4.2Z" />
-    </svg>
-  );
-}
-
-function YouTubeIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-      aria-hidden="true"
-    >
-      <path d="M21.6 7.2a3 3 0 0 0-2.1-2.1C17.6 4.6 12 4.6 12 4.6s-5.6 0-7.5.5A3 3 0 0 0 2.4 7.2C1.9 9.1 1.9 12 1.9 12s0 2.9.5 4.8a3 3 0 0 0 2.1 2.1c1.9.5 7.5.5 7.5.5s5.6 0 7.5-.5a3 3 0 0 0 2.1-2.1c.5-1.9.5-4.8.5-4.8s0-2.9-.5-4.8ZM10 15.5V8.5l6 3.5-6 3.5Z" />
-    </svg>
-  );
-}
 
 export default function ContactPage() {
   return (
@@ -197,7 +133,7 @@ export default function ContactPage() {
                   className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-600 transition hover:opacity-80 dark:bg-white/5"
                   aria-label="Facebook"
                 >
-                  <FacebookIcon className="h-5 w-5" />
+                  <Facebook className="h-5 w-5" />
                 </a>
 
                 <a
@@ -205,7 +141,7 @@ export default function ContactPage() {
                   className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-pink-50 text-pink-600 transition hover:opacity-80 dark:bg-white/5"
                   aria-label="Instagram"
                 >
-                  <InstagramIcon className="h-5 w-5" />
+                  <Instagram className="h-5 w-5" />
                 </a>
 
                 <a
@@ -213,7 +149,7 @@ export default function ContactPage() {
                   className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100 text-black transition hover:opacity-80 dark:bg-white/5 dark:text-gray-100"
                   aria-label="X"
                 >
-                  <XIcon className="h-5 w-5" />
+                  <Twitter className="h-5 w-5" />
                 </a>
 
                 <a
@@ -221,7 +157,7 @@ export default function ContactPage() {
                   className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100 text-black transition hover:opacity-80 dark:bg-white/5 dark:text-gray-100"
                   aria-label="TikTok"
                 >
-                  <TikTokIcon className="h-5 w-5" />
+                  <Music2 className="h-5 w-5" />
                 </a>
 
                 <a
@@ -229,7 +165,7 @@ export default function ContactPage() {
                   className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-red-50 text-red-600 transition hover:opacity-80 dark:bg-white/5"
                   aria-label="YouTube"
                 >
-                  <YouTubeIcon className="h-5 w-5" />
+                  <Youtube className="h-5 w-5" />
                 </a>
               </div>
             </div>
