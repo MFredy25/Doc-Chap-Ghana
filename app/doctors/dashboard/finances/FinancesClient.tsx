@@ -105,12 +105,16 @@ function mapDoctor(raw: unknown) {
     safeString(profile.fullName) ||
     `${firstName} ${safeString(profile.lastName)}`.trim() ||
     "Doctor";
+  const titledName =
+    name === "Doctor"
+      ? name
+      : `Dr. ${name.replace(/^dr\.?\s+/i, "")}`;
 
   const verificationStatus =
     safeString(professional.verificationStatus).toLowerCase() || "pending";
 
   return {
-    name,
+    name: titledName,
     firstName: firstName || name.split(" ")[0] || "Doctor",
     specialty:
       safeString(professional.specialty) ||

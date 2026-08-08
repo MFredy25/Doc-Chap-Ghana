@@ -160,6 +160,11 @@ function doctor(
     )}`.trim() ||
     "Doctor";
 
+  const titledName =
+    name === "Doctor"
+      ? name
+      : `Dr. ${name.replace(/^dr\.?\s+/i, "")}`;
+
   const verificationStatus =
     s(
       professional.verificationStatus
@@ -167,7 +172,7 @@ function doctor(
     "pending";
 
   return {
-    name,
+    name: titledName,
 
     specialty:
       s(

@@ -228,6 +228,11 @@ function mapDoctor(
     `${firstName} ${lastName}`.trim() ||
     "Doctor";
 
+  const titledName =
+    name === "Doctor"
+      ? name
+      : `Dr. ${name.replace(/^dr\.?\s+/i, "")}`;
+
   const verificationStatus =
     safeString(
       professional.verificationStatus
@@ -235,7 +240,7 @@ function mapDoctor(
     "pending";
 
   return {
-    name,
+    name: titledName,
 
     firstName:
       firstName ||

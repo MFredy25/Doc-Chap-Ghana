@@ -525,6 +525,11 @@ function doctorView(
     )}`.trim() ||
     "Doctor";
 
+  const titledName =
+    name === "Doctor"
+      ? name
+      : `Dr. ${name.replace(/^dr\.?\s+/i, "")}`;
+
   const verificationStatus =
     safeString(
       professional.verificationStatus
@@ -532,7 +537,7 @@ function doctorView(
     "pending";
 
   return {
-    name,
+    name: titledName,
 
     firstName:
       firstName ||

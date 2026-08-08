@@ -232,21 +232,30 @@ function mapProfile(
     ).split("@")[0] ||
     "My account";
 
+  const accountHref =
+    accountHrefForSource(
+      source,
+      raw
+    );
+
+  const headerFullName =
+    accountHref ===
+    "/doctors/my-account"
+      ? `Dr. ${fullName.replace(/^dr\.?\s+/i, "")}`
+      : fullName;
+
   return {
     firstName,
     lastName,
-    fullName,
+    fullName:
+      headerFullName,
     initials:
       makeInitials(
         firstName,
         lastName,
         fullName
       ),
-    accountHref:
-      accountHrefForSource(
-        source,
-        raw
-      ),
+    accountHref,
   };
 }
 

@@ -379,6 +379,11 @@ function mapDoctor(
     `${firstName} ${lastName}`.trim() ||
     "Doctor";
 
+  const titledDisplayName =
+    displayName === "Doctor"
+      ? displayName
+      : `Dr. ${displayName.replace(/^dr\.?\s+/i, "")}`;
+
   const specialty =
     safeString(
       professional.specialty
@@ -421,7 +426,7 @@ function mapDoctor(
       "verified";
 
   return {
-    name: displayName,
+    name: titledDisplayName,
 
     firstName:
       firstName ||

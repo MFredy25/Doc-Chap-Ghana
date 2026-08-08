@@ -965,6 +965,11 @@ export default function MyAccountClient() {
       ]
     );
 
+  const titledFullName =
+    fullName === "Doctor"
+      ? fullName
+      : `Dr. ${fullName.replace(/^dr\.?\s+/i, "")}`;
+
   const verified =
     useMemo(
       () =>
@@ -1090,7 +1095,7 @@ export default function MyAccountClient() {
                       </p>
 
                       <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-4xl lg:text-5xl">
-                        {fullName}
+                        {titledFullName}
                       </h1>
 
                       <p className="mt-3 max-w-2xl text-sm leading-7 text-blue-100 sm:text-base">
@@ -1459,7 +1464,7 @@ export default function MyAccountClient() {
                     </div>
 
                     <h3 className="mt-4 text-xl font-black text-zinc-950 dark:text-white">
-                      {fullName}
+                      {titledFullName}
                     </h3>
 
                     <p className="mt-1 text-sm font-medium text-zinc-500">
