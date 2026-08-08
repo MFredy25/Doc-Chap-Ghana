@@ -24,6 +24,7 @@ import {
   ArrowLeft,
   BadgeCheck,
   BellRing,
+  BriefcaseMedical,
   CheckCircle2,
   ChevronRight,
   CircleUserRound,
@@ -1035,98 +1036,134 @@ export default function MyAccountClient() {
 
         <main>
           {/* =====================================================
-              HERO
+              HERO / BANNER
           ===================================================== */}
 
-          <section className="relative overflow-hidden border-b border-zinc-200/80 bg-white dark:border-zinc-800 dark:bg-zinc-950">
-            <div className="pointer-events-none absolute -right-20 -top-24 h-80 w-80 rounded-full bg-blue-500/15 blur-3xl" />
-            <div className="pointer-events-none absolute -bottom-28 left-1/3 h-72 w-72 rounded-full bg-violet-500/10 blur-3xl" />
-            <div className="pointer-events-none absolute -left-20 top-1/2 h-64 w-64 rounded-full bg-cyan-500/10 blur-3xl" />
+          <section className="relative overflow-hidden border-b border-blue-950/20 bg-gradient-to-br from-[#071b3a] via-[#0b2f63] to-[#1767b5] text-white">
+            <div className="pointer-events-none absolute -right-24 -top-28 h-96 w-96 rounded-full bg-cyan-400/20 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-32 left-1/3 h-96 w-96 rounded-full bg-violet-500/20 blur-3xl" />
+            <div className="pointer-events-none absolute -left-24 top-1/4 h-80 w-80 rounded-full bg-blue-300/15 blur-3xl" />
 
-            <div className="relative w-full px-4 py-8 sm:px-6 sm:py-10 lg:px-10">
-              <div className="flex flex-col gap-7 xl:flex-row xl:items-center xl:justify-between">
+            <div className="pointer-events-none absolute inset-0 opacity-[0.08]">
+              <div className="absolute left-[8%] top-8 h-24 w-24 rounded-full border border-white" />
+              <div className="absolute right-[12%] top-14 h-16 w-16 rounded-2xl border border-white rotate-12" />
+              <div className="absolute bottom-10 left-[44%] h-20 w-20 rounded-full border border-white" />
+            </div>
+
+            <div className="relative w-full px-4 py-8 sm:px-6 sm:py-10 lg:px-10 lg:py-12">
+              <div className="flex flex-col gap-8 xl:flex-row xl:items-center xl:justify-between">
                 <div className="max-w-3xl">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300">
-                      <Stethoscope className="h-4 w-4" />
-                      My account
+                    <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-md">
+                      <Stethoscope className="h-4 w-4 text-cyan-300" />
+                      My doctor account
                     </span>
 
                     {verified ? (
-                      <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-300">
+                      <span className="inline-flex items-center gap-2 rounded-full border border-emerald-300/30 bg-emerald-400/15 px-3 py-1.5 text-xs font-semibold text-emerald-100 backdrop-blur-md">
                         <BadgeCheck className="h-4 w-4" />
                         Verified doctor
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-300">
+                      <span className="inline-flex items-center gap-2 rounded-full border border-amber-300/30 bg-amber-400/15 px-3 py-1.5 text-xs font-semibold text-amber-100 backdrop-blur-md">
                         <ShieldCheck className="h-4 w-4" />
-                        Verification{" "}
-                        {verificationStatus}
+                        Verification {verificationStatus}
                       </span>
                     )}
 
                     {profileCompleted && (
-                      <span className="inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1.5 text-xs font-semibold text-cyan-700 dark:border-cyan-900/50 dark:bg-cyan-950/30 dark:text-cyan-300">
+                      <span className="inline-flex items-center gap-2 rounded-full border border-cyan-300/30 bg-cyan-400/15 px-3 py-1.5 text-xs font-semibold text-cyan-100 backdrop-blur-md">
                         <CheckCircle2 className="h-4 w-4" />
                         Profile completed
                       </span>
                     )}
                   </div>
 
-                  <h1 className="mt-5 text-3xl font-black tracking-tight text-zinc-950 sm:text-4xl dark:text-white">
-                    {fullName}
-                  </h1>
+                  <div className="mt-6 flex items-start gap-4">
+                    <div className="hidden h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-white/20 bg-white/10 shadow-xl backdrop-blur-md sm:flex">
+                      <UserRound className="h-8 w-8 text-cyan-200" />
+                    </div>
 
-                  <p className="mt-3 max-w-2xl text-sm leading-7 text-zinc-600 sm:text-base dark:text-zinc-300">
-                    Manage your professional identity, medical credentials and practice information on Doc Chap Ghana.
-                  </p>
+                    <div>
+                      <p className="text-sm font-semibold text-blue-100">
+                        Doctor profile
+                      </p>
 
-                  <div className="mt-5 flex flex-wrap gap-2">
+                      <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-4xl lg:text-5xl">
+                        {fullName}
+                      </h1>
+
+                      <p className="mt-3 max-w-2xl text-sm leading-7 text-blue-100 sm:text-base">
+                        Manage your identity, medical credentials, contact details and professional presentation on Doc Chap Ghana.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 flex flex-wrap gap-2.5">
                     {form.specialty && (
-                      <span className="inline-flex items-center gap-2 rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-xs font-semibold text-violet-700 dark:border-violet-900/40 dark:bg-violet-950/30 dark:text-violet-300">
-                        <GraduationCap className="h-4 w-4" />
+                      <span className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/10 px-3.5 py-2.5 text-xs font-semibold text-white backdrop-blur-md">
+                        <GraduationCap className="h-4 w-4 text-violet-200" />
                         {form.specialty}
                       </span>
                     )}
 
-                    {form.city && (
-                      <span className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-950/30 dark:text-emerald-300">
-                        <MapPin className="h-4 w-4" />
-                        {form.city}, Ghana
+                    <span className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/10 px-3.5 py-2.5 text-xs font-semibold text-white backdrop-blur-md">
+                      <MapPin className="h-4 w-4 text-emerald-200" />
+                      {form.city ? `${form.city}, Ghana` : "Ghana"}
+                    </span>
+
+                    {form.email && (
+                      <span className="inline-flex max-w-full items-center gap-2 rounded-xl border border-white/15 bg-white/10 px-3.5 py-2.5 text-xs font-semibold text-white backdrop-blur-md">
+                        <Mail className="h-4 w-4 shrink-0 text-blue-200" />
+                        <span className="truncate">
+                          {form.email}
+                        </span>
                       </span>
                     )}
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-3 sm:flex-row">
-                  <Link
-                    href="/doctors/dashboard"
-                    className="inline-flex items-center justify-center gap-2 rounded-2xl border border-zinc-200 bg-white px-5 py-3 text-sm font-semibold text-zinc-800 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-950 dark:text-white"
-                  >
-                    <ArrowLeft className="h-4 w-4" />
-                    Dashboard
-                  </Link>
+                <div className="w-full xl:w-auto">
+                  <div className="rounded-[26px] border border-white/15 bg-white/10 p-3 shadow-2xl backdrop-blur-md sm:p-4">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 xl:grid-cols-1">
+                      <Link
+                        href="/doctors/dashboard"
+                        className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-5 py-3.5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-white/15"
+                      >
+                        <LayoutDashboard className="h-4 w-4" />
+                        Dashboard
+                      </Link>
 
-                  <button
-                    type="button"
-                    onClick={() =>
-                      void saveProfile()
-                    }
-                    disabled={saving}
-                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:-translate-y-0.5 hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {saving ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="h-4 w-4" />
-                        Save changes
-                      </>
-                    )}
-                  </button>
+                      <Link
+                        href="/doctors/dashboard/configuration"
+                        className="inline-flex items-center justify-center gap-2 rounded-2xl border border-violet-200/30 bg-violet-400/20 px-5 py-3.5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-violet-400/30"
+                      >
+                        <BriefcaseMedical className="h-4 w-4 text-violet-100" />
+                        Professional configuration
+                      </Link>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          void saveProfile()
+                        }
+                        disabled={saving}
+                        className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3.5 text-sm font-bold text-[#071b3a] shadow-xl transition hover:-translate-y-0.5 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {saving ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <Save className="h-4 w-4" />
+                            Save changes
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

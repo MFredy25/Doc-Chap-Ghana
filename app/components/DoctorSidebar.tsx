@@ -82,8 +82,8 @@ export default function DoctorSidebar() {
           "text-blue-600 dark:text-blue-300",
       },
       {
-        label: "Calendar",
-        href: "/doctors/dashboard/calendar",
+        label: "Schedule",
+        href: "/doctors/dashboard/schedule",
         icon: Calendar,
         iconClass:
           "text-indigo-600 dark:text-indigo-300",
@@ -331,7 +331,7 @@ export default function DoctorSidebar() {
           {/* MY ACCOUNT */}
 
           <Link
-            href="/doctors/mon-compte"
+            href="/doctors/my-account"
             onClick={() => {
               if (mobile) {
                 setMobileOpen(false);

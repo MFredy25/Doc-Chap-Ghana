@@ -1755,169 +1755,223 @@ export default function DoctorDashboardClient() {
 
         <main>
           {/* =====================================================
-              HERO
+              HERO / DOCTOR DASHBOARD BANNER
           ===================================================== */}
 
-          <section className="relative overflow-hidden border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
-            <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-blue-500/20 blur-3xl" />
+          <section className="relative overflow-hidden border-b border-blue-950/25 bg-gradient-to-br from-[#06172f] via-[#0a2d5d] to-[#1767b5] text-white">
+            <div className="pointer-events-none absolute -right-24 -top-32 h-[28rem] w-[28rem] rounded-full bg-cyan-400/20 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-40 left-[30%] h-[26rem] w-[26rem] rounded-full bg-violet-500/20 blur-3xl" />
+            <div className="pointer-events-none absolute -left-32 top-12 h-80 w-80 rounded-full bg-blue-300/10 blur-3xl" />
 
-            <div className="pointer-events-none absolute -bottom-28 -left-28 h-80 w-80 rounded-full bg-indigo-500/20 blur-3xl" />
+            <div className="pointer-events-none absolute inset-0 opacity-[0.08]">
+              <div className="absolute left-[8%] top-10 h-24 w-24 rounded-full border border-white" />
+              <div className="absolute right-[10%] top-16 h-20 w-20 rotate-12 rounded-3xl border border-white" />
+              <div className="absolute bottom-10 left-[46%] h-16 w-16 rounded-full border border-white" />
+            </div>
 
-            <div className="w-full px-4 py-8 sm:px-6 sm:py-10 lg:px-10">
-              <div className="grid grid-cols-1 gap-8 xl:grid-cols-[1.15fr_.85fr]">
-                {/* LEFT */}
-
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-800 dark:border-blue-900/40 dark:bg-blue-900/20 dark:text-blue-200">
-                      <Stethoscope className="h-4 w-4" />
-
-                      Doctor dashboard
-                    </span>
-
-                    {doctor.verified ? (
-                      <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800 dark:border-emerald-900/40 dark:bg-emerald-900/20 dark:text-emerald-200">
-                        <BadgeCheck className="h-4 w-4" />
-
-                        Verified doctor
+            <div className="relative w-full px-4 py-8 sm:px-6 sm:py-10 lg:px-10 lg:py-12">
+              <div className="grid grid-cols-1 gap-7 xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,.85fr)] xl:items-stretch">
+                <div className="flex flex-col justify-between">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white shadow-sm backdrop-blur-md">
+                        <Stethoscope className="h-4 w-4 text-cyan-300" />
+                        Doctor dashboard
                       </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-200">
-                        <ShieldCheck className="h-4 w-4" />
 
-                        Verification{" "}
-                        {doctor.verificationStatus ||
-                          "pending"}
+                      {doctor.verified ? (
+                        <span className="inline-flex items-center gap-2 rounded-full border border-emerald-300/30 bg-emerald-400/15 px-3 py-1.5 text-xs font-semibold text-emerald-100 backdrop-blur-md">
+                          <BadgeCheck className="h-4 w-4" />
+                          Verified doctor
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-2 rounded-full border border-amber-300/30 bg-amber-400/15 px-3 py-1.5 text-xs font-semibold text-amber-100 backdrop-blur-md">
+                          <ShieldCheck className="h-4 w-4" />
+                          Verification{" "}
+                          {doctor.verificationStatus || "pending"}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="mt-6 flex items-start gap-4">
+                      <div className="hidden h-16 w-16 shrink-0 items-center justify-center rounded-[22px] border border-white/20 bg-white/10 shadow-xl backdrop-blur-md sm:flex">
+                        <Stethoscope className="h-8 w-8 text-cyan-200" />
+                      </div>
+
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-blue-100">
+                          Welcome back
+                        </p>
+
+                        <h1 className="mt-1 break-words text-3xl font-black tracking-tight text-white sm:text-4xl lg:text-5xl">
+                          {doctor.name}
+                        </h1>
+
+                        <p className="mt-3 text-sm leading-7 text-blue-100 sm:text-base">
+                          {doctor.specialty}
+                          {" • "}
+                          {doctor.city}
+                          {" • "}
+                          {doctor.country}
+                        </p>
+                      </div>
+                    </div>
+
+                    <p className="mt-5 max-w-2xl text-sm leading-7 text-blue-100/95 sm:text-base">
+                      Manage your consultations, patients, schedule, payments and professional activity from your Doc Chap Ghana workspace.
+                    </p>
+
+                    <div className="mt-5 flex flex-wrap gap-2.5">
+                      <span className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/10 px-3.5 py-2.5 text-xs font-semibold text-white backdrop-blur-md">
+                        <ShieldCheck className="h-4 w-4 text-emerald-300" />
+                        Secure access
                       </span>
-                    )}
+
+                      <span className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/10 px-3.5 py-2.5 text-xs font-semibold text-white backdrop-blur-md">
+                        <Sparkles className="h-4 w-4 text-violet-300" />
+                        Teleconsultation
+                      </span>
+
+                      <span className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/10 px-3.5 py-2.5 text-xs font-semibold text-white backdrop-blur-md">
+                        <LineChart className="h-4 w-4 text-cyan-300" />
+                        Activity tracking
+                      </span>
+                    </div>
                   </div>
 
-                  <h1 className="mt-5 text-3xl font-bold tracking-tight text-black sm:text-4xl dark:text-white">
-                    Welcome,{" "}
-                    {doctor.name}
-                  </h1>
-
-                  <p className="mt-3 text-sm leading-7 text-zinc-600 sm:text-base dark:text-zinc-300">
-                    {doctor.specialty}
-                    {" • "}
-                    {doctor.city}
-                    {" • "}
-                    {doctor.country}
-                  </p>
-
-                  <div className="mt-5 flex flex-wrap gap-2">
-                    <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800">
-                      <ShieldCheck className="h-4 w-4" />
-
-                      Secure access
-                    </span>
-
-                    <span className="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-800">
-                      <Sparkles className="h-4 w-4" />
-
-                      Teleconsultation
-                    </span>
-
-                    <span className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-800">
-                      <LineChart className="h-4 w-4" />
-
-                      Activity tracking
-                    </span>
-                  </div>
-
-                  <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                  <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                     <Link
                       href="/doctors/dashboard/appointments"
-                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-blue-500"
+                      className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3.5 text-sm font-bold text-[#071b3a] shadow-xl transition hover:-translate-y-0.5 hover:bg-blue-50"
                     >
                       View appointments
-
                       <ArrowRight className="h-4 w-4" />
                     </Link>
 
                     <Link
-                      href="/doctors/mon-compte"
-                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-blue-600 bg-white px-5 py-3 text-sm font-semibold text-blue-700 transition hover:bg-blue-50 dark:bg-zinc-950 dark:text-blue-300"
+                      href="/doctors/my-account"
+                      className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-5 py-3.5 text-sm font-semibold text-white shadow-sm backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-white/15"
                     >
                       Complete my profile
-
                       <Stethoscope className="h-4 w-4" />
+                    </Link>
+
+                    <Link
+                      href="/doctors/dashboard/configuration"
+                      className="inline-flex items-center justify-center gap-2 rounded-2xl border border-cyan-300/30 bg-cyan-400/15 px-5 py-3.5 text-sm font-semibold text-cyan-50 backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-cyan-400/20"
+                    >
+                      Professional configuration
+                      <ArrowRight className="h-4 w-4" />
                     </Link>
                   </div>
                 </div>
 
-                {/* DAILY OVERVIEW */}
-
-                <div className="relative overflow-hidden rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm sm:p-6 dark:border-zinc-800 dark:bg-zinc-950">
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-blue-500/12 via-indigo-500/7 to-transparent" />
+                <div className="relative overflow-hidden rounded-[30px] border border-white/15 bg-white/10 p-4 shadow-2xl backdrop-blur-xl sm:p-5">
+                  <div className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-white/10 blur-2xl" />
 
                   <div className="relative">
                     <div className="flex items-start justify-between gap-4">
                       <div>
-                        <div className="text-sm font-semibold text-black dark:text-white">
+                        <div className="text-base font-black text-white">
                           Today&apos;s overview
                         </div>
 
-                        <div className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                          Appointments,
-                          notifications and
-                          activity.
+                        <div className="mt-1 text-xs leading-5 text-blue-100">
+                          Appointments, notifications and activity at a glance.
                         </div>
                       </div>
 
                       <Link
                         href="/doctors/dashboard/notifications"
-                        className={`inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold ${
-                          unreadCount >
-                          0
-                            ? "border-red-200 bg-red-50 text-red-700"
-                            : "border-zinc-200 bg-white text-zinc-700 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300"
+                        className={`relative inline-flex min-w-12 items-center justify-center gap-2 rounded-2xl border px-3 py-2.5 text-xs font-bold backdrop-blur-md transition hover:bg-white/15 ${
+                          unreadCount > 0
+                            ? "border-red-300/40 bg-red-400/20 text-red-50"
+                            : "border-white/20 bg-white/10 text-white"
                         }`}
                       >
                         <Bell className="h-4 w-4" />
-
                         {unreadCount}
                       </Link>
                     </div>
 
                     <div className="mt-5 grid grid-cols-2 gap-3">
-                      <StatCard
-                        label="Today's appointments"
-                        value={`${appointments.length}`}
-                        icon={
-                          CalendarCheck2
-                        }
-                        iconClass="bg-indigo-600"
-                      />
+                      <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-md">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/90 shadow-lg">
+                          <CalendarCheck2 className="h-5 w-5 text-white" />
+                        </div>
 
-                      <StatCard
-                        label="Upcoming"
-                        value={`${upcomingCount}`}
-                        icon={
-                          Clock
-                        }
-                        iconClass="bg-blue-600"
-                      />
+                        <div className="mt-4 text-2xl font-black text-white">
+                          {appointments.length}
+                        </div>
 
-                      <StatCard
-                        label="Video consultations"
-                        value={`${videoCount}`}
-                        icon={
-                          Video
-                        }
-                        iconClass="bg-violet-600"
-                      />
+                        <div className="mt-1 text-xs font-medium leading-5 text-blue-100">
+                          Today&apos;s appointments
+                        </div>
+                      </div>
 
-                      <StatCard
-                        label="Monthly revenue"
-                        value={
-                          revenueLabel
-                        }
-                        icon={
-                          CreditCard
-                        }
-                        iconClass="bg-emerald-600"
-                      />
+                      <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-md">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/90 shadow-lg">
+                          <Clock className="h-5 w-5 text-white" />
+                        </div>
+
+                        <div className="mt-4 text-2xl font-black text-white">
+                          {upcomingCount}
+                        </div>
+
+                        <div className="mt-1 text-xs font-medium leading-5 text-blue-100">
+                          Upcoming
+                        </div>
+                      </div>
+
+                      <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-md">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-500/90 shadow-lg">
+                          <Video className="h-5 w-5 text-white" />
+                        </div>
+
+                        <div className="mt-4 text-2xl font-black text-white">
+                          {videoCount}
+                        </div>
+
+                        <div className="mt-1 text-xs font-medium leading-5 text-blue-100">
+                          Video consultations
+                        </div>
+                      </div>
+
+                      <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-md">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/90 shadow-lg">
+                          <CreditCard className="h-5 w-5 text-white" />
+                        </div>
+
+                        <div className="mt-4 break-words text-xl font-black text-white sm:text-2xl">
+                          {revenueLabel}
+                        </div>
+
+                        <div className="mt-1 text-xs font-medium leading-5 text-blue-100">
+                          Monthly revenue
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-white/15 bg-[#06172f]/25 px-4 py-3 backdrop-blur-md">
+                      <div className="min-w-0">
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-200">
+                          Notifications
+                        </div>
+
+                        <div className="mt-1 text-sm font-bold text-white">
+                          {unreadCount > 0
+                            ? `${unreadCount} unread notification${unreadCount === 1 ? "" : "s"}`
+                            : "You're all caught up"}
+                        </div>
+                      </div>
+
+                      <Link
+                        href="/doctors/dashboard/notifications"
+                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/15 bg-white/10 text-white transition hover:bg-white/20"
+                        aria-label="Open notifications"
+                      >
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
                     </div>
                   </div>
                 </div>
@@ -2286,7 +2340,7 @@ export default function DoctorDashboardClient() {
 
                 <div className="flex flex-col gap-3 sm:flex-row">
                   <Link
-                    href="/doctors/mon-compte"
+                    href="/doctors/my-account"
                     className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-blue-500"
                   >
                     My account
