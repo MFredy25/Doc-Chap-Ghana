@@ -474,7 +474,7 @@ export default function DoctorSignupPage() {
       ======================================================== */
 
       router.replace(
-        "/doctors/my-account"
+        "/doctors/mon-compte"
       );
     } catch (signupError: any) {
       console.error(
