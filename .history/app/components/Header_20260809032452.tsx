@@ -4,7 +4,6 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
 import {
   useEffect,
   useMemo,
@@ -50,7 +49,6 @@ type AuthProfile = {
   fullName: string;
   initials: string;
   accountHref: string;
-  accountSpace: "clinic" | "doctor" | "patient" | "unknown";
 };
 
 type ProfileSource =
@@ -180,7 +178,7 @@ function accountHrefForSource(
     source ===
     "clinics"
   ) {
-    return "/clinics/my-account";
+    return "/clinics";
   }
 
   return "/";
@@ -258,14 +256,6 @@ function mapProfile(
         fullName
       ),
     accountHref,
-    accountSpace:
-      source === "clinics"
-        ? "clinic"
-        : source === "professionals"
-          ? "doctor"
-          : source === "patients"
-            ? "patient"
-            : "unknown",
   };
 }
 
@@ -313,8 +303,6 @@ function fallbackProfile(
       ),
     accountHref:
       "/",
-    accountSpace:
-      "unknown",
   };
 }
 
@@ -414,26 +402,33 @@ function NavItem({
 
 function ConnectedUserButton({
   profile,
-  onNavigate,
+  onClick,
 }: {
   profile: AuthProfile;
-  onNavigate: () => void;
+  onClick?: () => void;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onNavigate}
+    <Link
+      href={
+        profile.accountHref
+      }
+      onClick={
+        onClick
+      }
       className="flex min-w-0 items-center gap-2 rounded-[10px] border border-teal-200 bg-teal-50 px-2.5 py-1.5 text-sm font-semibold text-teal-900 shadow-sm transition hover:border-teal-300 hover:bg-teal-100 dark:border-teal-900/50 dark:bg-teal-950/30 dark:text-teal-100"
-      aria-label={`Open ${profile.fullName} account`}
     >
       <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-teal-600 text-[11px] font-black uppercase text-white shadow-sm">
-        {profile.initials}
+        {
+          profile.initials
+        }
       </span>
 
       <span className="max-w-[160px] truncate">
-        {profile.fullName}
+        {
+          profile.fullName
+        }
       </span>
-    </button>
+    </Link>
   );
 }
 
@@ -442,9 +437,6 @@ function ConnectedUserButton({
 ============================================================ */
 
 export default function Header() {
-  const router = useRouter();
-  const pathname = usePathname();
-
   const [
     mounted,
     setMounted,
@@ -587,27 +579,18 @@ export default function Header() {
             return;
           }
 
-          let foundProfile:
-            AuthProfile | null =
-            null;
-
-          /*
-           * Résolution simple du type de compte.
-           *
-           * 1. Clinique -> /clinics/my-account
-           * 2. Professionnel docteur -> /doctors/my-account
-           * 3. Patient -> /patients
-           * 4. Profil générique -> /
-           *
-           * Chaque recherche utilise exactement le UID Firebase connecté.
-           */
           const sources:
             ProfileSource[] =
             [
-              "clinics",
               "professionals",
               "patients",
+              "clinics",
+              "users",
             ];
+
+          let foundProfile:
+            AuthProfile | null =
+            null;
 
           for (
             const source
@@ -624,73 +607,17 @@ export default function Header() {
                 );
 
               if (
-                !snapshot.exists()
+                snapshot.exists()
               ) {
-                continue;
-              }
-
-              const data =
-                snapshot.data();
-
-              /*
-               * Si le document trouvé est dans professionals,
-               * on vérifie bien qu'il s'agit d'un docteur.
-               */
-              if (
-                source ===
-                "professionals"
-              ) {
-                const professional =
-                  safeObject(
-                    data.professional
+                foundProfile =
+                  mapProfile(
+                    source,
+                    snapshot.data(),
+                    user
                   );
 
-                const professionalType =
-                  safeString(
-                    data.professionalType ||
-                      professional.type ||
-                      data.role
-                  ).toLowerCase();
-
-                if (
-                  professionalType !==
-                  "doctor"
-                ) {
-                  continue;
-                }
+                break;
               }
-
-              foundProfile =
-                mapProfile(
-                  source,
-                  data,
-                  user
-                );
-
-              try {
-                const accountSpace =
-                  source === "clinics"
-                    ? "clinic"
-                    : source === "professionals"
-                      ? "doctor"
-                      : source === "patients"
-                        ? "patient"
-                        : "unknown";
-
-                if (
-                  accountSpace !==
-                  "unknown"
-                ) {
-                  window.localStorage.setItem(
-                    "docchapghana:account-space",
-                    accountSpace
-                  );
-                }
-              } catch {
-                // localStorage can be unavailable in restricted browser contexts.
-              }
-
-              break;
             } catch (
               profileError
             ) {
@@ -747,168 +674,6 @@ export default function Header() {
   ]);
 
   /* ============================================================
-     ACCOUNT NAVIGATION
-  ============================================================ */
-
-  function handleAccountNavigation() {
-    if (
-      !currentUser
-    ) {
-      return;
-    }
-
-    setMobileOpen(false);
-
-    /*
-     * 1. Destination déjà résolue depuis Firestore.
-     */
-    if (
-      authProfile?.accountHref ===
-        "/clinics/my-account" ||
-      authProfile?.accountHref ===
-        "/doctors/my-account" ||
-      authProfile?.accountHref ===
-        "/patients"
-    ) {
-      router.push(
-        authProfile.accountHref
-      );
-
-      return;
-    }
-
-    /*
-     * 2. Si l'utilisateur se trouve déjà dans un espace privé,
-     * on conserve strictement cet espace.
-     */
-    if (
-      pathname?.startsWith(
-        "/clinics"
-      )
-    ) {
-      try {
-        window.localStorage.setItem(
-          "docchapghana:account-space",
-          "clinic"
-        );
-      } catch {
-        // Ignore storage errors.
-      }
-
-      router.push(
-        "/clinics/my-account"
-      );
-
-      return;
-    }
-
-    if (
-      pathname?.startsWith(
-        "/doctors"
-      )
-    ) {
-      try {
-        window.localStorage.setItem(
-          "docchapghana:account-space",
-          "doctor"
-        );
-      } catch {
-        // Ignore storage errors.
-      }
-
-      router.push(
-        "/doctors/my-account"
-      );
-
-      return;
-    }
-
-    /*
-     * 3. Utilise le type de compte mémorisé lors d'une connexion,
-     * d'une inscription ou d'une précédente résolution Firestore.
-     *
-     * Cela permet notamment à un compte Auth déjà connecté de
-     * conserver son espace même lorsqu'un ancien profil Firestore
-     * n'a pas encore été correctement créé.
-     */
-    let storedSpace = "";
-
-    try {
-      storedSpace =
-        window.localStorage.getItem(
-          "docchapghana:account-space"
-        ) || "";
-    } catch {
-      storedSpace = "";
-    }
-
-    if (
-      storedSpace ===
-      "clinic"
-    ) {
-      router.push(
-        "/clinics/my-account"
-      );
-
-      return;
-    }
-
-    if (
-      storedSpace ===
-      "doctor"
-    ) {
-      router.push(
-        "/doctors/my-account"
-      );
-
-      return;
-    }
-
-    if (
-      storedSpace ===
-      "patient"
-    ) {
-      router.push(
-        "/patients"
-      );
-
-      return;
-    }
-
-    /*
-     * 4. Compatibilité avec les comptes cliniques créés par
-     * l'ancien signup : ce signup mettait le nom de la clinique
-     * dans Firebase Auth displayName avant la création Firestore.
-     *
-     * On n'utilise ce fallback que lorsque le Header n'a trouvé
-     * aucun espace Firestore. Le my-account vérifiera ensuite
-     * strictement l'UID connecté.
-     */
-    if (
-      authProfile?.accountSpace ===
-        "unknown" &&
-      currentUser.displayName
-    ) {
-      router.push(
-        "/clinics/my-account"
-      );
-
-      return;
-    }
-
-    console.warn(
-      "[Header] Unable to resolve account destination.",
-      {
-        uid:
-          currentUser.uid,
-        accountHref:
-          authProfile?.accountHref ??
-          "/",
-      }
-    );
-  }
-
-  /* ============================================================
      LOGOUT
   ============================================================ */
 
@@ -931,14 +696,6 @@ export default function Header() {
       await signOut(
         firebaseAuth
       );
-
-      try {
-        window.localStorage.removeItem(
-          "docchapghana:account-space"
-        );
-      } catch {
-        // Ignore storage errors.
-      }
 
       setLogoutOpen(
         false
@@ -1070,8 +827,9 @@ export default function Header() {
               authProfile ? (
               <>
                 <ConnectedUserButton
-                  profile={authProfile}
-                  onNavigate={handleAccountNavigation}
+                  profile={
+                    authProfile
+                  }
                 />
 
                 <button
@@ -1188,8 +946,14 @@ export default function Header() {
               authProfile && (
                 <div className="border-b border-gray-200 p-4 dark:border-gray-700">
                   <ConnectedUserButton
-                    profile={authProfile}
-                    onNavigate={handleAccountNavigation}
+                    profile={
+                      authProfile
+                    }
+                    onClick={() =>
+                      setMobileOpen(
+                        false
+                      )
+                    }
                   />
                 </div>
               )}

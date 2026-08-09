@@ -50,7 +50,6 @@ type AuthProfile = {
   fullName: string;
   initials: string;
   accountHref: string;
-  accountSpace: "clinic" | "doctor" | "patient" | "unknown";
 };
 
 type ProfileSource =
@@ -258,14 +257,6 @@ function mapProfile(
         fullName
       ),
     accountHref,
-    accountSpace:
-      source === "clinics"
-        ? "clinic"
-        : source === "professionals"
-          ? "doctor"
-          : source === "patients"
-            ? "patient"
-            : "unknown",
   };
 }
 
@@ -313,8 +304,6 @@ function fallbackProfile(
       ),
     accountHref:
       "/",
-    accountSpace:
-      "unknown",
   };
 }
 
@@ -607,6 +596,7 @@ export default function Header() {
               "clinics",
               "professionals",
               "patients",
+              "users",
             ];
 
           for (
@@ -666,29 +656,6 @@ export default function Header() {
                   data,
                   user
                 );
-
-              try {
-                const accountSpace =
-                  source === "clinics"
-                    ? "clinic"
-                    : source === "professionals"
-                      ? "doctor"
-                      : source === "patients"
-                        ? "patient"
-                        : "unknown";
-
-                if (
-                  accountSpace !==
-                  "unknown"
-                ) {
-                  window.localStorage.setItem(
-                    "docchapghana:account-space",
-                    accountSpace
-                  );
-                }
-              } catch {
-                // localStorage can be unavailable in restricted browser contexts.
-              }
 
               break;
             } catch (
@@ -751,159 +718,48 @@ export default function Header() {
   ============================================================ */
 
   function handleAccountNavigation() {
-    if (
-      !currentUser
-    ) {
-      return;
-    }
-
-    setMobileOpen(false);
-
-    /*
-     * 1. Destination déjà résolue depuis Firestore.
-     */
-    if (
-      authProfile?.accountHref ===
-        "/clinics/my-account" ||
-      authProfile?.accountHref ===
-        "/doctors/my-account" ||
-      authProfile?.accountHref ===
-        "/patients"
-    ) {
-      router.push(
-        authProfile.accountHref
-      );
-
+    if (!authProfile) {
       return;
     }
 
     /*
-     * 2. Si l'utilisateur se trouve déjà dans un espace privé,
-     * on conserve strictement cet espace.
+     * Priority 1:
+     * If the user is already browsing inside a clinic or doctor
+     * workspace, stay strictly inside that account space.
      */
-    if (
-      pathname?.startsWith(
-        "/clinics"
-      )
-    ) {
-      try {
-        window.localStorage.setItem(
-          "docchapghana:account-space",
-          "clinic"
-        );
-      } catch {
-        // Ignore storage errors.
-      }
-
-      router.push(
-        "/clinics/my-account"
-      );
-
+    if (pathname?.startsWith("/clinics")) {
+      setMobileOpen(false);
+      router.push("/clinics/my-account");
       return;
     }
 
-    if (
-      pathname?.startsWith(
-        "/doctors"
-      )
-    ) {
-      try {
-        window.localStorage.setItem(
-          "docchapghana:account-space",
-          "doctor"
-        );
-      } catch {
-        // Ignore storage errors.
-      }
-
-      router.push(
-        "/doctors/my-account"
-      );
-
+    if (pathname?.startsWith("/doctors")) {
+      setMobileOpen(false);
+      router.push("/doctors/my-account");
       return;
     }
 
     /*
-     * 3. Utilise le type de compte mémorisé lors d'une connexion,
-     * d'une inscription ou d'une précédente résolution Firestore.
-     *
-     * Cela permet notamment à un compte Auth déjà connecté de
-     * conserver son espace même lorsqu'un ancien profil Firestore
-     * n'a pas encore été correctement créé.
+     * Priority 2:
+     * On public pages, use the account type resolved from Firestore.
      */
-    let storedSpace = "";
-
-    try {
-      storedSpace =
-        window.localStorage.getItem(
-          "docchapghana:account-space"
-        ) || "";
-    } catch {
-      storedSpace = "";
-    }
+    const target = authProfile.accountHref;
 
     if (
-      storedSpace ===
-      "clinic"
+      target === "/clinics/my-account" ||
+      target === "/doctors/my-account" ||
+      target === "/patients"
     ) {
-      router.push(
-        "/clinics/my-account"
-      );
-
-      return;
-    }
-
-    if (
-      storedSpace ===
-      "doctor"
-    ) {
-      router.push(
-        "/doctors/my-account"
-      );
-
-      return;
-    }
-
-    if (
-      storedSpace ===
-      "patient"
-    ) {
-      router.push(
-        "/patients"
-      );
-
-      return;
-    }
-
-    /*
-     * 4. Compatibilité avec les comptes cliniques créés par
-     * l'ancien signup : ce signup mettait le nom de la clinique
-     * dans Firebase Auth displayName avant la création Firestore.
-     *
-     * On n'utilise ce fallback que lorsque le Header n'a trouvé
-     * aucun espace Firestore. Le my-account vérifiera ensuite
-     * strictement l'UID connecté.
-     */
-    if (
-      authProfile?.accountSpace ===
-        "unknown" &&
-      currentUser.displayName
-    ) {
-      router.push(
-        "/clinics/my-account"
-      );
-
+      setMobileOpen(false);
+      router.push(target);
       return;
     }
 
     console.warn(
       "[Header] Unable to resolve account destination.",
       {
-        uid:
-          currentUser.uid,
-        accountHref:
-          authProfile?.accountHref ??
-          "/",
+        uid: currentUser?.uid ?? null,
+        accountHref: target,
       }
     );
   }
@@ -931,14 +787,6 @@ export default function Header() {
       await signOut(
         firebaseAuth
       );
-
-      try {
-        window.localStorage.removeItem(
-          "docchapghana:account-space"
-        );
-      } catch {
-        // Ignore storage errors.
-      }
 
       setLogoutOpen(
         false
