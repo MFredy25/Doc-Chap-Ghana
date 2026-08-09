@@ -6,44 +6,37 @@ import {
   useMemo,
   useState,
 } from "react";
-
 import {
   useRouter,
 } from "next/navigation";
-
 import {
   onAuthStateChanged,
   signOut,
 } from "firebase/auth";
-
 import {
   Timestamp,
   collection,
   doc,
   onSnapshot,
 } from "firebase/firestore";
-
 import {
   AlertCircle,
   ArrowLeft,
   BadgeCheck,
   Building2,
   CheckCircle2,
-  Headphones,
+  FileText,
   Mail,
-  MessageCircle,
-  MessagesSquare,
+  Phone,
   Plus,
   Search,
-  Stethoscope,
-  UserRound,
+  ShieldCheck,
 } from "lucide-react";
 
 import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
 import ClinicSidebar from "@/app/components/ClinicSidebar";
-import ClinicCreateNewMessageModal from "@/app/components/ClinicCreateNewMessageModal";
-
+import ClinicAddNewInsuranceModal from "@/app/components/ClinicAddNewInsuranceModal";
 import {
   auth,
   db,
@@ -53,7 +46,7 @@ import {
    TYPES
 ============================================================ */
 
-type ClinicProfileData = {
+type ClinicData = {
   uid?: string;
   role?: string;
   accountType?: string;
@@ -66,7 +59,6 @@ type ClinicProfileData = {
     fullName?: string;
     city?: string;
     region?: string;
-    email?: string;
   };
 
   clinic?: {
@@ -76,30 +68,26 @@ type ClinicProfileData = {
   };
 };
 
-type MessageItem = {
+type InsuranceItem = {
   id: string;
 
   clinicId?: string;
-  clinicName?: string;
 
-  senderId?: string;
-  senderType?: string;
-  senderName?: string;
+  name?: string;
+  insurerName?: string;
+  companyName?: string;
 
-  recipientId?: string;
-  recipientDocumentId?: string;
-  recipientType?: string;
-  recipientName?: string;
+  contactName?: string;
+  email?: string;
+  phone?: string;
 
-  subject?: string;
+  reference?: string;
+  contractReference?: string;
 
-  text?: string;
-  message?: string;
-  content?: string;
-
-  read?: boolean;
-  direction?: string;
   status?: string;
+  active?: boolean;
+
+  notes?: string;
 
   createdAt?: unknown;
   updatedAt?: unknown;
@@ -176,8 +164,7 @@ function toDate(
       ).toDate;
 
     if (
-      typeof candidate ===
-      "function"
+      typeof candidate === "function"
     ) {
       try {
         return (
@@ -192,7 +179,7 @@ function toDate(
   return null;
 }
 
-function formatDateTime(
+function formatDate(
   value: unknown
 ): string {
   const date =
@@ -208,49 +195,29 @@ function formatDateTime(
       {
         dateStyle:
           "medium",
-        timeStyle:
-          "short",
         timeZone:
           "Africa/Accra",
       }
     ).format(date);
   } catch {
-    return date.toLocaleString();
+    return date.toLocaleDateString();
   }
 }
 
-function recipientBadgeClass(
-  type: string
-): string {
-  if (
-    type === "doctor"
-  ) {
-    return "bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300";
-  }
-
-  if (
-    type === "patient"
-  ) {
-    return "bg-violet-50 text-violet-700 dark:bg-violet-950/30 dark:text-violet-300";
-  }
-
-  return "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300";
-}
-
-function messageBody(
-  item: MessageItem
+function insuranceName(
+  item: InsuranceItem
 ): string {
   return (
     safeString(
-      item.text
+      item.insurerName
     ) ||
     safeString(
-      item.message
+      item.companyName
     ) ||
     safeString(
-      item.content
+      item.name
     ) ||
-    "Message"
+    "Insurance company"
   );
 }
 
@@ -258,7 +225,7 @@ function messageBody(
    PAGE
 ============================================================ */
 
-export default function MessagesClient() {
+export default function InsuranceClient() {
   const router =
     useRouter();
 
@@ -272,15 +239,15 @@ export default function MessagesClient() {
     uid,
     setUid,
   ] =
-    useState<
-      string | null
-    >(null);
+    useState<string | null>(
+      null
+    );
 
   const [
     clinicData,
     setClinicData,
   ] =
-    useState<ClinicProfileData | null>(
+    useState<ClinicData | null>(
       null
     );
 
@@ -301,10 +268,10 @@ export default function MessagesClient() {
     );
 
   const [
-    messages,
-    setMessages,
+    items,
+    setItems,
   ] =
-    useState<MessageItem[]>(
+    useState<InsuranceItem[]>(
       []
     );
 
@@ -315,13 +282,13 @@ export default function MessagesClient() {
     useState("");
 
   const [
-    createMessageOpen,
-    setCreateMessageOpen,
+    addInsuranceOpen,
+    setAddInsuranceOpen,
   ] =
     useState(false);
 
   /* ============================================================
-     AUTHENTICATION + CLINIC
+     AUTH / CLINIC
   ============================================================ */
 
   useEffect(() => {
@@ -338,11 +305,9 @@ export default function MessagesClient() {
       setError(
         "Firebase is not initialized."
       );
-
       setLoading(
         false
       );
-
       return;
     }
 
@@ -373,7 +338,6 @@ export default function MessagesClient() {
             router.replace(
               "/clinics/login"
             );
-
             return;
           }
 
@@ -417,12 +381,11 @@ export default function MessagesClient() {
                   router.replace(
                     "/clinics/login"
                   );
-
                   return;
                 }
 
                 const data =
-                  snapshot.data() as ClinicProfileData;
+                  snapshot.data() as ClinicData;
 
                 const clinic =
                   safeObject(
@@ -460,7 +423,6 @@ export default function MessagesClient() {
                   router.replace(
                     "/clinics/login"
                   );
-
                   return;
                 }
 
@@ -480,7 +442,7 @@ export default function MessagesClient() {
                 snapshotError
               ) => {
                 console.error(
-                  "[ClinicMessages] Clinic realtime error:",
+                  "[ClinicInsurance] Profile error:",
                   snapshotError
                 );
 
@@ -505,7 +467,7 @@ export default function MessagesClient() {
   ]);
 
   /* ============================================================
-     MESSAGES REALTIME
+     INSURANCE REALTIME
   ============================================================ */
 
   useEffect(() => {
@@ -530,7 +492,7 @@ export default function MessagesClient() {
         firestoreInstance,
         "clinics",
         clinicUid,
-        "messages"
+        "insurance"
       ),
       (
         snapshot
@@ -545,7 +507,7 @@ export default function MessagesClient() {
 
               ...(
                 item.data() as Omit<
-                  MessageItem,
+                  InsuranceItem,
                   "id"
                 >
               ),
@@ -576,7 +538,7 @@ export default function MessagesClient() {
           }
         );
 
-        setMessages(
+        setItems(
           rows
         );
       },
@@ -584,12 +546,12 @@ export default function MessagesClient() {
         snapshotError
       ) => {
         console.error(
-          "[ClinicMessages] Messages realtime error:",
+          "[ClinicInsurance] Realtime error:",
           snapshotError
         );
 
         setError(
-          "Unable to load clinic messages."
+          "Unable to load clinic insurance partners."
         );
       }
     );
@@ -642,11 +604,6 @@ export default function MessagesClient() {
             ) ||
             "Ghana",
 
-          email:
-            safeString(
-              profile.email
-            ),
-
           verified:
             clinicInfo.verified ===
               true ||
@@ -663,7 +620,7 @@ export default function MessagesClient() {
       ]
     );
 
-  const filteredMessages =
+  const filteredItems =
     useMemo(
       () => {
         const term =
@@ -672,22 +629,24 @@ export default function MessagesClient() {
             .toLowerCase();
 
         if (!term) {
-          return messages;
+          return items;
         }
 
-        return messages.filter(
+        return items.filter(
           (
             item
           ) => {
             const haystack =
               [
-                item.senderName,
-                item.recipientName,
-                item.recipientType,
-                item.subject,
-                messageBody(
+                insuranceName(
                   item
                 ),
+                item.contactName,
+                item.email,
+                item.phone,
+                item.reference,
+                item.contractReference,
+                item.status,
               ]
                 .map(
                   safeString
@@ -704,7 +663,7 @@ export default function MessagesClient() {
         );
       },
       [
-        messages,
+        items,
         search,
       ]
     );
@@ -713,45 +672,53 @@ export default function MessagesClient() {
     useMemo(
       () => ({
         total:
-          messages.length,
+          items.length,
 
-        doctors:
-          messages.filter(
+        active:
+          items.filter(
             (
               item
             ) =>
+              item.active !==
+                false &&
               safeString(
-                item.recipientType
-              ).toLowerCase() ===
-              "doctor"
+                item.status
+              ).toLowerCase() !==
+                "inactive"
           ).length,
 
-        patients:
-          messages.filter(
+        withEmail:
+          items.filter(
             (
               item
             ) =>
-              safeString(
-                item.recipientType
-              ).toLowerCase() ===
-              "patient"
+              Boolean(
+                safeString(
+                  item.email
+                )
+              )
           ).length,
 
-        support:
-          messages.filter(
+        withPhone:
+          items.filter(
             (
               item
             ) =>
-              safeString(
-                item.recipientType
-              ).toLowerCase() ===
-              "support"
+              Boolean(
+                safeString(
+                  item.phone
+                )
+              )
           ).length,
       }),
       [
-        messages,
+        items,
       ]
     );
+
+  const latestInsurance =
+    items[0] ||
+    null;
 
   /* ============================================================
      LOADING
@@ -767,10 +734,10 @@ export default function MessagesClient() {
 
           <main className="flex min-h-[75vh] items-center justify-center px-4">
             <div className="w-full max-w-md rounded-[28px] border border-zinc-200/80 bg-white p-8 text-center shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-              <MessagesSquare className="mx-auto h-8 w-8 text-blue-600" />
+              <ShieldCheck className="mx-auto h-8 w-8 text-blue-600" />
 
               <p className="mt-4 text-sm font-semibold text-zinc-900 dark:text-white">
-                Loading clinic messages...
+                Loading clinic insurance...
               </p>
             </div>
           </main>
@@ -791,9 +758,7 @@ export default function MessagesClient() {
         <Header />
 
         <main>
-          {/* =====================================================
-              HERO
-          ===================================================== */}
+          {/* HERO */}
 
           <section className="relative overflow-hidden border-b border-blue-950/20 bg-gradient-to-br from-[#071b3a] via-[#0b2f63] to-[#1767b5] text-white">
             <div className="pointer-events-none absolute -right-24 -top-28 h-96 w-96 rounded-full bg-cyan-400/20 blur-3xl" />
@@ -814,9 +779,9 @@ export default function MessagesClient() {
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold backdrop-blur">
-                      <MessagesSquare className="h-4 w-4 text-cyan-200" />
+                      <ShieldCheck className="h-4 w-4 text-cyan-200" />
 
-                      Clinic messaging
+                      Insurance partners
                     </span>
 
                     {clinic.verified ? (
@@ -836,11 +801,11 @@ export default function MessagesClient() {
                   </div>
 
                   <h1 className="mt-5 text-3xl font-black tracking-tight sm:text-4xl">
-                    Messages
+                    Insurance
                   </h1>
 
                   <p className="mt-3 max-w-3xl text-sm leading-7 text-blue-100 sm:text-base">
-                    Follow your clinic communications and create secure messages for doctors, patients or Doc Chap support.
+                    Register the insurance companies your clinic works with and keep their contact information in one place.
                   </p>
 
                   <div className="mt-5 flex flex-wrap gap-2">
@@ -851,10 +816,10 @@ export default function MessagesClient() {
                     </span>
 
                     <span className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-xs font-semibold backdrop-blur">
-                      <MessageCircle className="h-4 w-4 text-violet-200" />
+                      <ShieldCheck className="h-4 w-4 text-violet-200" />
 
-                      {messages.length} message
-                      {messages.length ===
+                      {stats.total} insurer
+                      {stats.total ===
                       1
                         ? ""
                         : "s"}
@@ -873,7 +838,7 @@ export default function MessagesClient() {
                       null
                     );
 
-                    setCreateMessageOpen(
+                    setAddInsuranceOpen(
                       true
                     );
                   }}
@@ -881,15 +846,13 @@ export default function MessagesClient() {
                 >
                   <Plus className="h-4 w-4" />
 
-                  Create new message
+                  Add insurance
                 </button>
               </div>
             </div>
           </section>
 
-          {/* =====================================================
-              CONTENT
-          ===================================================== */}
+          {/* CONTENT */}
 
           <section className="w-full px-4 py-8 sm:px-6 lg:px-10">
             {error && (
@@ -908,149 +871,177 @@ export default function MessagesClient() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
-              {/* =================================================
-                  LEFT - HISTORY
-              ================================================= */}
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_390px]">
+              {/* LEFT */}
 
-              <section className="rounded-[28px] border border-zinc-200 bg-white p-5 shadow-sm sm:p-6 dark:border-zinc-800 dark:bg-zinc-950">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <h2 className="text-lg font-black text-zinc-950 dark:text-white">
-                      Message history
-                    </h2>
+              <div className="space-y-6">
+                {/* INSURANCE LIST */}
 
-                    <p className="mt-1 text-sm text-zinc-500">
-                      Messages recorded under your clinic account.
-                    </p>
+                <section className="rounded-[28px] border border-zinc-200 bg-white p-5 shadow-sm sm:p-6 dark:border-zinc-800 dark:bg-zinc-950">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <h2 className="text-lg font-black text-zinc-950 dark:text-white">
+                        Insurance partners
+                      </h2>
+
+                      <p className="mt-1 text-sm text-zinc-500">
+                        {filteredItems.length} insurance compan
+                        {filteredItems.length ===
+                        1
+                          ? "y"
+                          : "ies"}{" "}
+                        displayed.
+                      </p>
+                    </div>
+
+                    <ShieldCheck className="h-6 w-6 text-blue-600" />
                   </div>
 
-                  <MessageCircle className="h-6 w-6 text-sky-600" />
-                </div>
+                  <div className="relative mt-5">
+                    <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
 
-                <div className="relative mt-5">
-                  <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
-
-                  <input
-                    value={
-                      search
-                    }
-                    onChange={(
-                      event
-                    ) =>
-                      setSearch(
-                        event.target
-                          .value
-                      )
-                    }
-                    placeholder="Search messages..."
-                    className="h-11 w-full rounded-2xl border border-zinc-200 bg-zinc-50 pl-11 pr-4 text-sm outline-none focus:border-blue-400 dark:border-zinc-800 dark:bg-zinc-900 dark:text-white"
-                  />
-                </div>
-
-                {filteredMessages.length ===
-                0 ? (
-                  <div className="mt-6 rounded-2xl border border-dashed border-zinc-200 bg-zinc-50 p-8 text-center dark:border-zinc-800 dark:bg-zinc-900/50">
-                    <MessageCircle className="mx-auto h-8 w-8 text-zinc-400" />
-
-                    <p className="mt-3 text-sm font-semibold text-zinc-700 dark:text-zinc-300">
-                      No messages found.
-                    </p>
-
-                    <p className="mt-1 text-xs text-zinc-500">
-                      Click Create new message to start a conversation.
-                    </p>
+                    <input
+                      value={
+                        search
+                      }
+                      onChange={(
+                        event
+                      ) =>
+                        setSearch(
+                          event.target
+                            .value
+                        )
+                      }
+                      placeholder="Search insurance company..."
+                      className="h-11 w-full rounded-2xl border border-zinc-200 bg-zinc-50 pl-11 pr-4 text-sm outline-none focus:border-blue-400 dark:border-zinc-800 dark:bg-zinc-900 dark:text-white"
+                    />
                   </div>
-                ) : (
-                  <div className="mt-6 space-y-3">
-                    {filteredMessages.map(
-                      (
-                        item
-                      ) => {
-                        const type =
-                          safeString(
-                            item.recipientType
-                          ).toLowerCase() ||
-                          "recipient";
 
-                        const dateLabel =
-                          formatDateTime(
-                            item.createdAt
-                          );
+                  {filteredItems.length ===
+                  0 ? (
+                    <div className="mt-6 rounded-2xl border border-dashed border-zinc-200 bg-zinc-50 p-8 text-center dark:border-zinc-800 dark:bg-zinc-900/50">
+                      <ShieldCheck className="mx-auto h-8 w-8 text-zinc-400" />
 
-                        return (
-                          <article
-                            key={
-                              item.id
-                            }
-                            className="rounded-[22px] border border-zinc-200 bg-zinc-50 p-4 transition hover:border-blue-200 hover:bg-white hover:shadow-sm dark:border-zinc-800 dark:bg-zinc-900/60 dark:hover:bg-zinc-900"
-                          >
-                            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                              <div className="min-w-0">
-                                <div className="flex flex-wrap items-center gap-2">
-                                  <h3 className="truncate text-sm font-black text-zinc-950 dark:text-white">
-                                    {safeString(
-                                      item.recipientName
-                                    ) ||
-                                      safeString(
-                                        item.senderName
-                                      ) ||
-                                      "Conversation"}
-                                  </h3>
+                      <p className="mt-3 text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+                        No insurance company added yet.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+                      {filteredItems.map(
+                        (
+                          item
+                        ) => {
+                          const active =
+                            item.active !==
+                              false &&
+                            safeString(
+                              item.status
+                            ).toLowerCase() !==
+                              "inactive";
 
-                                  <span
-                                    className={`rounded-full px-2.5 py-1 text-[10px] font-bold capitalize ${recipientBadgeClass(
-                                      type
-                                    )}`}
-                                  >
-                                    {type}
-                                  </span>
+                          const createdLabel =
+                            formatDate(
+                              item.createdAt
+                            );
+
+                          return (
+                            <article
+                              key={
+                                item.id
+                              }
+                              className="rounded-[22px] border border-zinc-200 bg-zinc-50 p-4 transition hover:border-blue-200 hover:bg-white hover:shadow-sm dark:border-zinc-800 dark:bg-zinc-900/60 dark:hover:bg-zinc-900"
+                            >
+                              <div className="flex items-start gap-3">
+                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-300">
+                                  <ShieldCheck className="h-5 w-5" />
                                 </div>
 
-                                {item.subject && (
-                                  <p className="mt-1 text-xs font-bold text-zinc-600 dark:text-zinc-300">
-                                    {item.subject}
-                                  </p>
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <h3 className="truncate text-sm font-black text-zinc-950 dark:text-white">
+                                      {insuranceName(
+                                        item
+                                      )}
+                                    </h3>
+
+                                    <span
+                                      className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${
+                                        active
+                                          ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300"
+                                          : "bg-zinc-200 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
+                                      }`}
+                                    >
+                                      {active
+                                        ? "Active"
+                                        : "Inactive"}
+                                    </span>
+                                  </div>
+
+                                  {item.contactName && (
+                                    <p className="mt-1 text-xs text-zinc-500">
+                                      Contact:{" "}
+                                      {item.contactName}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="mt-4 space-y-2">
+                                {item.email && (
+                                  <div className="flex items-center gap-2 text-xs text-zinc-500">
+                                    <Mail className="h-4 w-4" />
+
+                                    {item.email}
+                                  </div>
+                                )}
+
+                                {item.phone && (
+                                  <div className="flex items-center gap-2 text-xs text-zinc-500">
+                                    <Phone className="h-4 w-4" />
+
+                                    {item.phone}
+                                  </div>
+                                )}
+
+                                {(item.contractReference ||
+                                  item.reference) && (
+                                  <div className="flex items-center gap-2 text-xs text-zinc-500">
+                                    <FileText className="h-4 w-4" />
+
+                                    {item.contractReference ||
+                                      item.reference}
+                                  </div>
                                 )}
                               </div>
 
-                              {dateLabel && (
-                                <span className="shrink-0 text-[11px] text-zinc-400">
-                                  {dateLabel}
-                                </span>
+                              {item.notes && (
+                                <p className="mt-3 text-xs leading-5 text-zinc-500">
+                                  {item.notes}
+                                </p>
                               )}
-                            </div>
 
-                            <p className="mt-3 line-clamp-3 text-sm leading-6 text-zinc-500 dark:text-zinc-400">
-                              {messageBody(
-                                item
+                              {createdLabel && (
+                                <div className="mt-4 border-t border-zinc-200 pt-3 text-[11px] text-zinc-400 dark:border-zinc-800">
+                                  Added{" "}
+                                  {createdLabel}
+                                </div>
                               )}
-                            </p>
+                            </article>
+                          );
+                        }
+                      )}
+                    </div>
+                  )}
+                </section>
+              </div>
 
-                            <div className="mt-3 flex items-center gap-2 text-[11px] font-semibold text-zinc-400">
-                              <Mail className="h-3.5 w-3.5" />
-
-                              {safeString(
-                                item.status
-                              ) ||
-                                "sent"}
-                            </div>
-                          </article>
-                        );
-                      }
-                    )}
-                  </div>
-                )}
-              </section>
-
-              {/* =================================================
-                  RIGHT
-              ================================================= */}
+              {/* RIGHT */}
 
               <aside className="space-y-5">
                 <section className="rounded-[28px] border border-blue-200 bg-blue-50/70 p-5 shadow-sm dark:border-blue-900/40 dark:bg-blue-950/20">
                   <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-600 text-white">
-                    <MessagesSquare className="h-5 w-5" />
+                    <ShieldCheck className="h-5 w-5" />
                   </div>
 
                   <div className="mt-4 text-3xl font-black text-zinc-950 dark:text-white">
@@ -1058,80 +1049,118 @@ export default function MessagesClient() {
                   </div>
 
                   <div className="mt-1 text-sm font-bold text-zinc-700 dark:text-zinc-200">
-                    Total messages
+                    Total insurers
                   </div>
 
                   <p className="mt-2 text-xs leading-5 text-zinc-500">
-                    Messages stored for this clinic.
+                    Insurance companies linked to this clinic.
                   </p>
                 </section>
 
                 <section className="rounded-[28px] border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
                   <h3 className="text-sm font-black text-zinc-950 dark:text-white">
-                    Message recipients
+                    Insurance overview
                   </h3>
 
-                  <div className="mt-4 space-y-3">
-                    <div className="flex items-center justify-between rounded-2xl bg-blue-50 p-3 dark:bg-blue-950/30">
-                      <div className="flex items-center gap-2 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-                        <Stethoscope className="h-4 w-4 text-blue-600" />
+                  <div className="mt-4 grid grid-cols-2 gap-3">
+                    <div className="rounded-2xl bg-emerald-50 p-4 dark:bg-emerald-950/30">
+                      <BadgeCheck className="h-5 w-5 text-emerald-600" />
 
-                        Doctors
+                      <div className="mt-3 text-2xl font-black text-zinc-950 dark:text-white">
+                        {stats.active}
                       </div>
 
-                      <span className="text-sm font-black text-zinc-950 dark:text-white">
-                        {stats.doctors}
-                      </span>
+                      <div className="mt-1 text-xs font-semibold text-zinc-500">
+                        Active
+                      </div>
                     </div>
 
-                    <div className="flex items-center justify-between rounded-2xl bg-violet-50 p-3 dark:bg-violet-950/30">
-                      <div className="flex items-center gap-2 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-                        <UserRound className="h-4 w-4 text-violet-600" />
+                    <div className="rounded-2xl bg-blue-50 p-4 dark:bg-blue-950/30">
+                      <Mail className="h-5 w-5 text-blue-600" />
 
-                        Patients
+                      <div className="mt-3 text-2xl font-black text-zinc-950 dark:text-white">
+                        {stats.withEmail}
                       </div>
 
-                      <span className="text-sm font-black text-zinc-950 dark:text-white">
-                        {stats.patients}
-                      </span>
+                      <div className="mt-1 text-xs font-semibold text-zinc-500">
+                        With email
+                      </div>
                     </div>
 
-                    <div className="flex items-center justify-between rounded-2xl bg-emerald-50 p-3 dark:bg-emerald-950/30">
-                      <div className="flex items-center gap-2 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-                        <Headphones className="h-4 w-4 text-emerald-600" />
+                    <div className="rounded-2xl bg-cyan-50 p-4 dark:bg-cyan-950/30">
+                      <Phone className="h-5 w-5 text-cyan-600" />
 
-                        Support
+                      <div className="mt-3 text-2xl font-black text-zinc-950 dark:text-white">
+                        {stats.withPhone}
                       </div>
 
-                      <span className="text-sm font-black text-zinc-950 dark:text-white">
-                        {stats.support}
-                      </span>
+                      <div className="mt-1 text-xs font-semibold text-zinc-500">
+                        With phone
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl bg-violet-50 p-4 dark:bg-violet-950/30">
+                      <FileText className="h-5 w-5 text-violet-600" />
+
+                      <div className="mt-3 text-2xl font-black text-zinc-950 dark:text-white">
+                        {items.filter(
+                          (
+                            item
+                          ) =>
+                            Boolean(
+                              safeString(
+                                item.contractReference ||
+                                  item.reference
+                              )
+                            )
+                        ).length}
+                      </div>
+
+                      <div className="mt-1 text-xs font-semibold text-zinc-500">
+                        With reference
+                      </div>
                     </div>
                   </div>
                 </section>
 
                 <section className="rounded-[28px] border border-emerald-200 bg-emerald-50/70 p-5 dark:border-emerald-900/40 dark:bg-emerald-950/20">
-                  <Headphones className="h-6 w-6 text-emerald-600" />
+                  <ShieldCheck className="h-6 w-6 text-emerald-600" />
 
                   <h3 className="mt-3 text-sm font-black text-zinc-950 dark:text-white">
-                    Doc Chap Support
+                    Latest insurer
                   </h3>
 
-                  <p className="mt-2 text-xs leading-5 text-zinc-600 dark:text-zinc-400">
-                    Use Create new message and select Support to contact the Doc Chap support team.
-                  </p>
-                </section>
+                  {latestInsurance ? (
+                    <div className="mt-4 rounded-2xl bg-white/80 p-4 dark:bg-zinc-950/60">
+                      <div className="text-sm font-black text-zinc-950 dark:text-white">
+                        {insuranceName(
+                          latestInsurance
+                        )}
+                      </div>
 
-                <section className="rounded-[28px] border border-violet-200 bg-violet-50/70 p-5 dark:border-violet-900/40 dark:bg-violet-950/20">
-                  <MessageCircle className="h-6 w-6 text-violet-600" />
+                      <div className="mt-1 text-xs text-zinc-500">
+                        {latestInsurance.contactName ||
+                          latestInsurance.email ||
+                          latestInsurance.phone ||
+                          "No contact information"}
+                      </div>
 
-                  <h3 className="mt-3 text-sm font-black text-zinc-950 dark:text-white">
-                    One messaging workspace
-                  </h3>
-
-                  <p className="mt-2 text-xs leading-5 text-zinc-600 dark:text-zinc-400">
-                    Doctors, clinic patients and platform support can all be selected from the new message modal.
-                  </p>
+                      {formatDate(
+                        latestInsurance.createdAt
+                      ) && (
+                        <div className="mt-3 text-[11px] text-zinc-400">
+                          Added{" "}
+                          {formatDate(
+                            latestInsurance.createdAt
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="mt-3 text-xs text-zinc-500">
+                      No insurance company has been added yet.
+                    </p>
+                  )}
                 </section>
               </aside>
             </div>
@@ -1139,9 +1168,9 @@ export default function MessagesClient() {
         </main>
 
         {uid && (
-          <ClinicCreateNewMessageModal
+          <ClinicAddNewInsuranceModal
             open={
-              createMessageOpen
+              addInsuranceOpen
             }
             clinicId={
               uid
@@ -1149,21 +1178,20 @@ export default function MessagesClient() {
             clinicName={
               clinic.name
             }
-            clinicEmail={
-              clinic.email
-            }
             onClose={() =>
-              setCreateMessageOpen(
+              setAddInsuranceOpen(
                 false
               )
             }
-            onCreated={() => {
-              setCreateMessageOpen(
+            onCreated={(
+              insuranceName
+            ) => {
+              setAddInsuranceOpen(
                 false
               );
 
               setSuccess(
-                "Message sent successfully."
+                `${insuranceName} has been added to your insurance partners.`
               );
             }}
           />

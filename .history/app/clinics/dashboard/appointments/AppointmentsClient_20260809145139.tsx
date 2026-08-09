@@ -36,7 +36,6 @@ import {
   Loader2,
   MapPin,
   Phone,
-  Plus,
   Stethoscope,
   UserRound,
   Users,
@@ -46,7 +45,6 @@ import {
 import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
 import ClinicSidebar from "@/app/components/ClinicSidebar";
-import ClinicCreateAppointmentModal from "@/app/components/ClinicCreateAppointmentModal";
 
 import {
   auth,
@@ -519,12 +517,6 @@ export default function AppointmentsClient() {
       | "completed"
       | "cancelled"
     >("all");
-
-  const [
-    createAppointmentOpen,
-    setCreateAppointmentOpen,
-  ] =
-    useState(false);
 
   /* ============================================================
      AUTH / CLINIC
@@ -1191,20 +1183,6 @@ export default function AppointmentsClient() {
                     </span>
                   </div>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setCreateAppointmentOpen(
-                      true
-                    )
-                  }
-                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-bold text-[#071b3a] shadow-xl transition hover:-translate-y-0.5 hover:bg-blue-50"
-                >
-                  <Plus className="h-4 w-4" />
-
-                  Create appointment
-                </button>
               </div>
             </div>
           </section>
@@ -1631,33 +1609,6 @@ export default function AppointmentsClient() {
             </div>
           </section>
         </main>
-
-        {uid && (
-          <ClinicCreateAppointmentModal
-            open={
-              createAppointmentOpen
-            }
-            clinicId={
-              uid
-            }
-            clinicName={
-              clinic.name
-            }
-            onClose={() =>
-              setCreateAppointmentOpen(
-                false
-              )
-            }
-            onCreated={() => {
-              setCreateAppointmentOpen(
-                false
-              );
-              setFilter(
-                "all"
-              );
-            }}
-          />
-        )}
 
         <Footer />
       </div>

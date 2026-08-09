@@ -144,9 +144,9 @@ export default function Footer() {
             <div className="flex items-start gap-2">
               <Building2 className="h-4 w-4 text-white mt-1" />
               <span>
-                Mercury Global
+                Doc Chap Ghana
                 <br />
-                Ghana
+                Powered by Konacare
               </span>
             </div>
 

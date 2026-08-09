@@ -54,6 +54,7 @@ import {
 
 import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
+import ClinicSidebar from "@/app/components/ClinicSidebar";
 
 import {
   auth,
@@ -1468,23 +1469,27 @@ export default function MyAccountClient() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#f7f9fc] dark:bg-black">
-        <Header />
+        <ClinicSidebar />
 
-        <main className="flex min-h-[75vh] items-center justify-center px-4">
-          <div className="w-full max-w-md rounded-[28px] border border-zinc-200/80 bg-white p-8 text-center shadow-[0_18px_60px_rgba(15,23,42,0.08)] dark:border-zinc-800 dark:bg-zinc-950">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-950/40">
-              <Loader2 className="h-7 w-7 animate-spin text-blue-600" />
+        <div className="lg:pl-72">
+          <Header />
+
+          <main className="flex min-h-[75vh] items-center justify-center px-4">
+            <div className="w-full max-w-md rounded-[28px] border border-zinc-200/80 bg-white p-8 text-center shadow-[0_18px_60px_rgba(15,23,42,0.08)] dark:border-zinc-800 dark:bg-zinc-950">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-950/40">
+                <Loader2 className="h-7 w-7 animate-spin text-blue-600" />
+              </div>
+
+              <div className="mt-5 text-sm font-semibold text-zinc-900 dark:text-white">
+                Loading your clinic account...
+              </div>
+
+              <p className="mt-2 text-xs leading-5 text-zinc-500 dark:text-zinc-400">
+                Retrieving your Doc Chap Ghana clinic information.
+              </p>
             </div>
-
-            <div className="mt-5 text-sm font-semibold text-zinc-900 dark:text-white">
-              Loading your clinic account...
-            </div>
-
-            <p className="mt-2 text-xs leading-5 text-zinc-500 dark:text-zinc-400">
-              Retrieving your Doc Chap Ghana clinic information.
-            </p>
-          </div>
-        </main>
+          </main>
+        </div>
       </div>
     );
   }
@@ -1495,9 +1500,12 @@ export default function MyAccountClient() {
 
   return (
     <div className="min-h-screen bg-[#f7f9fc] dark:bg-black">
-      <Header />
+      <ClinicSidebar />
 
-      <main>
+      <div className="lg:pl-72">
+        <Header />
+
+        <main>
         {/* =====================================================
             HERO / BANNER
         ===================================================== */}
@@ -2222,9 +2230,10 @@ export default function MyAccountClient() {
             </aside>
           </div>
         </section>
-      </main>
+        </main>
 
-      <Footer />
+        <Footer />
+      </div>
 
       {/* =========================================================
           POPUP

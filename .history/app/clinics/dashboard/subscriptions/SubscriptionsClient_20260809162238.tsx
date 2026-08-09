@@ -1,0 +1,985 @@
+"use client";
+
+import React, {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
+import Link from "next/link";
+import {
+  useRouter,
+} from "next/navigation";
+
+import {
+  onAuthStateChanged,
+  signOut,
+} from "firebase/auth";
+
+import {
+  doc,
+  onSnapshot,
+} from "firebase/firestore";
+
+import {
+  AlertCircle,
+  ArrowRight,
+  BadgeCheck,
+  Building2,
+  Check,
+  CheckCircle2,
+  Crown,
+  Loader2,
+  ShieldCheck,
+  Sparkles,
+  Star,
+  Users,
+  WalletCards,
+  Zap,
+} from "lucide-react";
+
+import Header from "@/app/components/Header";
+import Footer from "@/app/components/Footer";
+import ClinicSidebar from "@/app/components/ClinicSidebar";
+
+import {
+  auth,
+  db,
+} from "@/lib/firebase/client";
+
+/* ============================================================
+   TYPES
+============================================================ */
+
+type PlanId =
+  | "essential"
+  | "professional"
+  | "premium";
+
+type SubscriptionPlan = {
+  id: PlanId;
+  name: string;
+  description: string;
+  price: number;
+  currency: "GHS";
+  billingPeriod: "month";
+  badge?: string;
+  icon: React.ElementType;
+  iconClass: string;
+  buttonClass: string;
+  featured: boolean;
+  features: string[];
+};
+
+type ClinicData = {
+  uid?: string;
+  role?: string;
+  accountType?: string;
+  status?: string;
+  active?: boolean;
+
+  profile?: {
+    clinicName?: string;
+    displayName?: string;
+    fullName?: string;
+    city?: string;
+    region?: string;
+  };
+
+  clinic?: {
+    type?: string;
+    verified?: boolean;
+    verificationStatus?: string;
+  };
+
+  subscription?: {
+    planId?: string;
+    plan?: string;
+    planName?: string;
+    status?: string;
+    price?: number;
+    currency?: string;
+    billingPeriod?: string;
+  };
+};
+
+type ClinicView = {
+  name: string;
+  city: string;
+  verified: boolean;
+  verificationStatus: string;
+};
+
+type CurrentSubscription = {
+  planId: PlanId | null;
+  status: string;
+};
+
+/* ============================================================
+   PLANS
+============================================================ */
+
+const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
+  {
+    id: "essential",
+    name: "Essential",
+    description:
+      "The essentials to manage your clinic activity on Doc Chap Ghana.",
+    price: 0,
+    currency: "GHS",
+    billingPeriod: "month",
+    icon: Building2,
+    iconClass:
+      "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300",
+    buttonClass:
+      "border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-300",
+    featured: false,
+    features: [
+      "Clinic profile",
+      "Patient directory",
+      "Appointment management",
+      "Clinic schedule",
+      "Basic healthcare team management",
+      "Basic notifications",
+      "Basic support",
+    ],
+  },
+  {
+    id: "professional",
+    name: "Professional",
+    description:
+      "A complete plan for clinics managing patients, teams and consultations every day.",
+    price: 99,
+    currency: "GHS",
+    billingPeriod: "month",
+    badge: "Most popular",
+    icon: Zap,
+    iconClass:
+      "bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300",
+    buttonClass:
+      "bg-blue-600 text-white hover:bg-blue-500",
+    featured: true,
+    features: [
+      "Everything in Essential",
+      "Teleconsultation management",
+      "Clinic messaging",
+      "Financial dashboard",
+      "Clinic statistics",
+      "Insurance management",
+      "Expanded healthcare team tools",
+      "Priority support",
+    ],
+  },
+  {
+    id: "premium",
+    name: "Premium",
+    description:
+      "Advanced tools and priority services for clinics with higher activity and larger teams.",
+    price: 199,
+    currency: "GHS",
+    billingPeriod: "month",
+    badge: "Advanced",
+    icon: Crown,
+    iconClass:
+      "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300",
+    buttonClass:
+      "bg-[#071b3a] text-white hover:bg-[#0b2f63] dark:bg-white dark:text-[#071b3a]",
+    featured: false,
+    features: [
+      "Everything in Professional",
+      "Advanced clinic statistics",
+      "Extended financial insights",
+      "Priority clinic assistance",
+      "Enhanced clinic visibility",
+      "Priority feature access",
+      "Premium support",
+    ],
+  },
+];
+
+/* ============================================================
+   HELPERS
+============================================================ */
+
+function safeString(
+  value: unknown
+): string {
+  return (value ?? "")
+    .toString()
+    .trim();
+}
+
+function safeObject(
+  value: unknown
+): Record<string, unknown> {
+  if (
+    value &&
+    typeof value === "object" &&
+    !Array.isArray(value)
+  ) {
+    return value as Record<
+      string,
+      unknown
+    >;
+  }
+
+  return {};
+}
+
+function mapClinic(
+  raw: ClinicData | null
+): ClinicView {
+  const data =
+    raw || {};
+
+  const profile =
+    safeObject(
+      data.profile
+    );
+
+  const clinic =
+    safeObject(
+      data.clinic
+    );
+
+  const verificationStatus =
+    safeString(
+      clinic.verificationStatus
+    ).toLowerCase() ||
+    "pending";
+
+  return {
+    name:
+      safeString(
+        profile.clinicName
+      ) ||
+      safeString(
+        profile.displayName
+      ) ||
+      safeString(
+        profile.fullName
+      ) ||
+      "Clinic",
+
+    city:
+      safeString(
+        profile.city
+      ) ||
+      safeString(
+        profile.region
+      ) ||
+      "Ghana",
+
+    verified:
+      clinic.verified ===
+        true ||
+      verificationStatus ===
+        "verified" ||
+      verificationStatus ===
+        "approved",
+
+    verificationStatus,
+  };
+}
+
+function getCurrentSubscription(
+  raw: ClinicData | null
+): CurrentSubscription {
+  const subscription =
+    safeObject(
+      raw?.subscription
+    );
+
+  const rawPlanId =
+    safeString(
+      subscription.planId ||
+        subscription.plan
+    ).toLowerCase();
+
+  const planId:
+    PlanId | null =
+    rawPlanId ===
+      "essential" ||
+    rawPlanId ===
+      "professional" ||
+    rawPlanId ===
+      "premium"
+      ? rawPlanId
+      : null;
+
+  return {
+    planId,
+
+    status:
+      safeString(
+        subscription.status
+      ).toLowerCase() ||
+      (
+        planId
+          ? "active"
+          : "none"
+      ),
+  };
+}
+
+function formatPrice(
+  price: number,
+  currency: string
+): string {
+  if (
+    price === 0
+  ) {
+    return "Free";
+  }
+
+  try {
+    return new Intl.NumberFormat(
+      "en-GH",
+      {
+        style: "currency",
+        currency,
+        maximumFractionDigits: 0,
+      }
+    ).format(
+      price
+    );
+  } catch {
+    return `${price} ${currency}`;
+  }
+}
+
+/* ============================================================
+   PAGE
+============================================================ */
+
+export default function SubscriptionsClient() {
+  const router =
+    useRouter();
+
+  const [
+    loading,
+    setLoading,
+  ] =
+    useState(true);
+
+  const [
+    uid,
+    setUid,
+  ] =
+    useState<string | null>(
+      null
+    );
+
+  const [
+    clinicData,
+    setClinicData,
+  ] =
+    useState<ClinicData | null>(
+      null
+    );
+
+  const [
+    error,
+    setError,
+  ] =
+    useState<string | null>(
+      null
+    );
+
+  const [
+    selectedPlanCard,
+    setSelectedPlanCard,
+  ] =
+    useState<PlanId | null>(
+      null
+    );
+
+  /* ============================================================
+     AUTH + REALTIME CLINIC
+  ============================================================ */
+
+  useEffect(() => {
+    const firebaseAuth =
+      auth;
+
+    const firestore =
+      db;
+
+    if (
+      !firebaseAuth ||
+      !firestore
+    ) {
+      setError(
+        "Firebase is not initialized."
+      );
+
+      setLoading(
+        false
+      );
+
+      return;
+    }
+
+    const firebaseAuthInstance =
+      firebaseAuth;
+
+    const firestoreInstance =
+      firestore;
+
+    let unsubscribeClinic:
+      | (() => void)
+      | null =
+      null;
+
+    const unsubscribeAuth =
+      onAuthStateChanged(
+        firebaseAuthInstance,
+        (
+          user
+        ) => {
+          unsubscribeClinic?.();
+          unsubscribeClinic =
+            null;
+
+          if (
+            !user?.uid
+          ) {
+            router.replace(
+              "/clinics/login"
+            );
+
+            return;
+          }
+
+          setUid(
+            user.uid
+          );
+
+          try {
+            window.localStorage.setItem(
+              "docchapghana:account-space",
+              "clinic"
+            );
+          } catch {
+            // Non-blocking.
+          }
+
+          unsubscribeClinic =
+            onSnapshot(
+              doc(
+                firestoreInstance,
+                "clinics",
+                user.uid
+              ),
+              async (
+                snapshot
+              ) => {
+                if (
+                  !snapshot.exists()
+                ) {
+                  try {
+                    await signOut(
+                      firebaseAuthInstance
+                    );
+                  } catch {
+                    // Non-blocking.
+                  }
+
+                  router.replace(
+                    "/clinics/login"
+                  );
+
+                  return;
+                }
+
+                const data =
+                  snapshot.data() as ClinicData;
+
+                const clinic =
+                  safeObject(
+                    data.clinic
+                  );
+
+                const accountType =
+                  safeString(
+                    data.accountType ||
+                      data.role ||
+                      clinic.type
+                  ).toLowerCase();
+
+                if (
+                  (
+                    accountType &&
+                    accountType !==
+                      "clinic"
+                  ) ||
+                  data.active ===
+                    false ||
+                  safeString(
+                    data.status
+                  ).toLowerCase() ===
+                    "disabled"
+                ) {
+                  try {
+                    await signOut(
+                      firebaseAuthInstance
+                    );
+                  } catch {
+                    // Non-blocking.
+                  }
+
+                  router.replace(
+                    "/clinics/login"
+                  );
+
+                  return;
+                }
+
+                setClinicData(
+                  data
+                );
+
+                setError(
+                  null
+                );
+
+                setLoading(
+                  false
+                );
+              },
+              (
+                realtimeError
+              ) => {
+                console.error(
+                  "[ClinicSubscriptions] Realtime error:",
+                  realtimeError
+                );
+
+                setError(
+                  "Unable to load your clinic subscription."
+                );
+
+                setLoading(
+                  false
+                );
+              }
+            );
+        }
+      );
+
+    return () => {
+      unsubscribeAuth();
+      unsubscribeClinic?.();
+    };
+  }, [
+    router,
+  ]);
+
+  /* ============================================================
+     COMPUTED
+  ============================================================ */
+
+  const clinic =
+    useMemo(
+      () =>
+        mapClinic(
+          clinicData
+        ),
+      [
+        clinicData,
+      ]
+    );
+
+  const currentSubscription =
+    useMemo(
+      () =>
+        getCurrentSubscription(
+          clinicData
+        ),
+      [
+        clinicData,
+      ]
+    );
+
+  const currentPlan =
+    SUBSCRIPTION_PLANS.find(
+      (
+        plan
+      ) =>
+        plan.id ===
+        currentSubscription.planId
+    ) ||
+    null;
+
+  /* ============================================================
+     LOADING
+  ============================================================ */
+
+  if (
+    loading
+  ) {
+    return (
+      <div className="min-h-screen bg-[#f6f8fc] dark:bg-black">
+        <ClinicSidebar />
+
+        <div className="lg:pl-72">
+          <Header />
+
+          <main className="flex min-h-[75vh] items-center justify-center">
+            <div className="rounded-[28px] border border-zinc-200 bg-white p-8 text-center shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
+              <Loader2 className="mx-auto h-8 w-8 animate-spin text-blue-600" />
+
+              <p className="mt-4 text-sm font-semibold text-zinc-700 dark:text-zinc-200">
+                Loading subscription plans...
+              </p>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  /* ============================================================
+     RENDER
+  ============================================================ */
+
+  return (
+    <div className="min-h-screen bg-[#f6f8fc] dark:bg-black">
+      <ClinicSidebar />
+
+      <div className="lg:pl-72">
+        <Header />
+
+        <main>
+          {/* HERO */}
+
+          <section className="relative overflow-hidden border-b border-blue-950/20 bg-gradient-to-br from-[#06172f] via-[#0a2d5d] to-[#1767b5] text-white">
+            <div className="pointer-events-none absolute -right-24 -top-28 h-96 w-96 rounded-full bg-cyan-400/20 blur-3xl" />
+
+            <div className="pointer-events-none absolute -bottom-32 left-1/3 h-80 w-80 rounded-full bg-violet-500/20 blur-3xl" />
+
+            <div className="relative px-4 py-8 sm:px-6 sm:py-10 lg:px-10">
+              <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold backdrop-blur">
+                      <Crown className="h-4 w-4 text-cyan-300" />
+
+                      Subscriptions
+                    </span>
+
+                    {clinic.verified ? (
+                      <span className="inline-flex items-center gap-2 rounded-full border border-emerald-300/30 bg-emerald-400/15 px-3 py-1.5 text-xs font-semibold text-emerald-100">
+                        <BadgeCheck className="h-4 w-4" />
+
+                        Verified clinic
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-2 rounded-full border border-amber-300/30 bg-amber-400/15 px-3 py-1.5 text-xs font-semibold text-amber-100">
+                        <ShieldCheck className="h-4 w-4" />
+
+                        Verification{" "}
+                        {clinic.verificationStatus}
+                      </span>
+                    )}
+                  </div>
+
+                  <h1 className="mt-5 text-3xl font-black tracking-tight sm:text-4xl">
+                    Choose your clinic plan
+                  </h1>
+
+                  <p className="mt-3 max-w-2xl text-sm leading-7 text-blue-100">
+                    Choose the Doc Chap Ghana subscription that best fits your clinic, healthcare team and patient activity.
+                  </p>
+
+                  <div className="mt-5 inline-flex rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-xs font-semibold backdrop-blur">
+                    {clinic.name}
+                    {" • "}
+                    {clinic.city}
+                  </div>
+                </div>
+
+                <Link
+                  href="/clinics/dashboard"
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-bold text-[#071b3a] shadow-xl transition hover:-translate-y-0.5 hover:bg-blue-50"
+                >
+                  Dashboard
+
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </div>
+          </section>
+
+          {/* CONTENT */}
+
+          <section className="px-4 py-7 sm:px-6 lg:px-10 lg:py-10">
+            {error && (
+              <div className="mb-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700 dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-300">
+                <AlertCircle className="mr-2 inline h-4 w-4" />
+
+                {error}
+              </div>
+            )}
+
+            {/* CURRENT PLAN */}
+
+            <div className="mb-7 rounded-[28px] border border-zinc-200 bg-white p-5 shadow-sm sm:p-6 dark:border-zinc-800 dark:bg-zinc-950">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
+                    <WalletCards className="h-6 w-6" />
+                  </div>
+
+                  <div>
+                    <div className="text-xs font-bold uppercase tracking-[0.12em] text-zinc-400">
+                      Current subscription
+                    </div>
+
+                    <h2 className="mt-1 text-lg font-black text-zinc-950 dark:text-white">
+                      {currentPlan
+                        ? currentPlan.name
+                        : "No active plan"}
+                    </h2>
+
+                    <p className="mt-1 text-xs leading-5 text-zinc-500 dark:text-zinc-400">
+                      {currentPlan
+                        ? `Status: ${currentSubscription.status || "active"}`
+                        : "Select one of the plans below to configure your clinic subscription."}
+                    </p>
+                  </div>
+                </div>
+
+                {currentPlan && (
+                  <span className="inline-flex w-fit items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-950/20 dark:text-emerald-300">
+                    <CheckCircle2 className="h-4 w-4" />
+
+                    Selected plan
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* PLANS */}
+
+            <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
+              {SUBSCRIPTION_PLANS.map(
+                (
+                  plan
+                ) => {
+                  const PlanIcon =
+                    plan.icon;
+
+                  const isCurrentPlan =
+                    currentSubscription.planId ===
+                    plan.id;
+
+                  return (
+                    <article
+                      key={
+                        plan.id
+                      }
+                      role="button"
+                      tabIndex={0}
+                      onMouseEnter={() =>
+                        setSelectedPlanCard(
+                          plan.id
+                        )
+                      }
+                      onMouseLeave={() =>
+                        setSelectedPlanCard(
+                          null
+                        )
+                      }
+                      onFocus={() =>
+                        setSelectedPlanCard(
+                          plan.id
+                        )
+                      }
+                      onBlur={() =>
+                        setSelectedPlanCard(
+                          null
+                        )
+                      }
+                      onClick={() =>
+                        router.push(
+                          `/clinics/dashboard/subscriptions/${plan.id}`
+                        )
+                      }
+                      onKeyDown={(event) => {
+                        if (
+                          event.key === "Enter" ||
+                          event.key === " "
+                        ) {
+                          event.preventDefault();
+
+                          router.push(
+                            `/clinics/dashboard/subscriptions/${plan.id}`
+                          );
+                        }
+                      }}
+                      className={`relative flex h-full cursor-pointer flex-col overflow-hidden rounded-[30px] border bg-white p-5 shadow-sm transition-all duration-300 sm:p-6 dark:bg-zinc-950 ${
+                        selectedPlanCard === plan.id
+                          ? "border-blue-500 shadow-xl shadow-blue-500/10 ring-4 ring-blue-500/10 -translate-y-1 dark:border-blue-500"
+                          : isCurrentPlan
+                          ? "border-blue-500 ring-2 ring-blue-500/10 dark:border-blue-500"
+                          : plan.featured
+                          ? "border-blue-300 dark:border-blue-800"
+                          : "border-zinc-200 hover:shadow-lg dark:border-zinc-800"
+                      }`}
+                    >
+                      {plan.badge && (
+                        <div className="absolute right-4 top-4">
+                          <span
+                            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wide ${
+                              plan.featured
+                                ? "bg-blue-600 text-white"
+                                : "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
+                            }`}
+                          >
+                            {plan.featured && (
+                              <Star className="h-3 w-3 fill-current" />
+                            )}
+
+                            {plan.badge}
+                          </span>
+                        </div>
+                      )}
+
+                      <div
+                        className={`flex h-12 w-12 items-center justify-center rounded-2xl ${plan.iconClass}`}
+                      >
+                        <PlanIcon className="h-6 w-6" />
+                      </div>
+
+                      <h2 className="mt-5 text-xl font-black text-zinc-950 dark:text-white">
+                        {plan.name}
+                      </h2>
+
+                      <p className="mt-2 min-h-[44px] text-sm leading-6 text-zinc-500 dark:text-zinc-400">
+                        {plan.description}
+                      </p>
+
+                      <div className="mt-6 border-y border-zinc-100 py-5 dark:border-zinc-800">
+                        <div className="flex items-end gap-2">
+                          <span className="text-3xl font-black tracking-tight text-zinc-950 dark:text-white">
+                            {formatPrice(
+                              plan.price,
+                              plan.currency
+                            )}
+                          </span>
+
+                          {plan.price > 0 && (
+                            <span className="pb-1 text-xs font-semibold text-zinc-400">
+                              / month
+                            </span>
+                          )}
+                        </div>
+
+                        <p className="mt-1 text-[11px] text-zinc-400">
+                          {plan.price === 0
+                            ? "No monthly subscription fee"
+                            : "Monthly clinic subscription"}
+                        </p>
+                      </div>
+
+                      <div className="mt-5 flex-1">
+                        <div className="text-xs font-black uppercase tracking-wide text-zinc-400">
+                          Included
+                        </div>
+
+                        <div className="mt-4 space-y-3">
+                          {plan.features.map(
+                            (
+                              feature
+                            ) => (
+                              <div
+                                key={
+                                  feature
+                                }
+                                className="flex items-start gap-2.5"
+                              >
+                                <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-300">
+                                  <Check className="h-3.5 w-3.5" />
+                                </div>
+
+                                <span className="text-xs leading-5 text-zinc-600 dark:text-zinc-300">
+                                  {feature}
+                                </span>
+                              </div>
+                            )
+                          )}
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+
+                          if (
+                            isCurrentPlan
+                          ) {
+                            return;
+                          }
+
+                          router.push(
+                            `/clinics/dashboard/subscriptions/${plan.id}`
+                          );
+                        }}
+                        disabled={
+                          isCurrentPlan
+                        }
+                        className={`mt-7 inline-flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-60 ${plan.buttonClass}`}
+                      >
+                        {isCurrentPlan ? (
+                          <>
+                            <CheckCircle2 className="h-4 w-4" />
+
+                            Current plan
+                          </>
+                        ) : (
+                          <>
+                            {plan.featured ? (
+                              <Sparkles className="h-4 w-4" />
+                            ) : (
+                              <PlanIcon className="h-4 w-4" />
+                            )}
+
+                            View{" "}
+                            {plan.name}{" "}
+                            details
+                          </>
+                        )}
+                      </button>
+                    </article>
+                  );
+                }
+              )}
+            </div>
+
+            {/* NOTE */}
+
+            <div className="mt-7 rounded-[28px] border border-blue-200 bg-blue-50/70 p-5 dark:border-blue-900/40 dark:bg-blue-950/20">
+              <div className="flex items-start gap-3">
+                <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-blue-700 dark:text-blue-300" />
+
+                <div>
+                  <h3 className="text-sm font-black text-zinc-950 dark:text-white">
+                    Secure subscription management
+                  </h3>
+
+                  <p className="mt-1 text-xs leading-5 text-zinc-600 dark:text-zinc-400">
+                    Plan selection is recorded only on your clinic account. Paid-plan payment and automatic activation can be connected to your subscription payment flow later.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+        </main>
+
+        <Footer />
+      </div>
+    </div>
+  );
+}
