@@ -57,7 +57,6 @@ import {
   Trash2,
   Video,
   X,
-  CalendarDays,
 } from "lucide-react";
 
 import Header from "@/app/components/Header";
