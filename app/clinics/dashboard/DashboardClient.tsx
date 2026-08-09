@@ -30,6 +30,7 @@ import {
   CheckCircle2,
   CircleDollarSign,
   Clock3,
+  Crown,
   Loader2,
   MapPin,
   MessageCircle,
@@ -88,6 +89,13 @@ type ClinicData = {
 
   meta?: {
     profileCompleted?: boolean;
+  };
+
+  subscription?: {
+    planId?: string;
+    plan?: string;
+    planName?: string;
+    status?: string;
   };
 };
 
@@ -513,6 +521,25 @@ export default function DashboardClient() {
             clinicData?.clinic
           );
 
+        const subscription =
+          safeObject(
+            clinicData?.subscription
+          );
+
+        const planId =
+          safeString(
+            subscription.planId ||
+              subscription.plan
+          );
+
+        const planName =
+          safeString(
+            subscription.planName
+          ) ||
+          (planId
+            ? `${planId.charAt(0).toUpperCase()}${planId.slice(1)}`
+            : "No plan selected");
+
         const verificationStatus =
           safeString(
             clinic.verificationStatus
@@ -551,6 +578,8 @@ export default function DashboardClient() {
             "Clinic",
 
           ownerName,
+
+          planName,
 
           city:
             safeString(
@@ -702,6 +731,12 @@ export default function DashboardClient() {
                       <MapPin className="h-4 w-4 text-emerald-200" />
 
                       {view.city}
+                    </span>
+
+                    <span className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/10 px-3.5 py-2.5 text-xs font-semibold backdrop-blur-md">
+                      <Crown className="h-4 w-4 text-amber-200" />
+
+                      {view.planName}
                     </span>
                   </div>
                 </div>

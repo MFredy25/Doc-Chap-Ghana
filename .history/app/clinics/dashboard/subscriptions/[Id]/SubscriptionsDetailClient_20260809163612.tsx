@@ -10,7 +10,6 @@ import Link from "next/link";
 import {
   useParams,
   useRouter,
-  useSearchParams,
 } from "next/navigation";
 
 import {
@@ -66,8 +65,6 @@ type PlanId =
   | "essential"
   | "professional"
   | "premium";
-
-type BillingDuration = 1 | 3 | 6 | 12;
 
 type PlanFeatureGroup = {
   title: string;
@@ -617,78 +614,6 @@ function formatPrice(
   }
 }
 
-
-function parseBillingDuration(
-  value: string | null
-): BillingDuration {
-  const parsed = Number(value);
-
-  if (
-    parsed === 3 ||
-    parsed === 6 ||
-    parsed === 12
-  ) {
-    return parsed;
-  }
-
-  return 1;
-}
-
-function getDiscountPercent(
-  months: BillingDuration
-): number {
-  if (months === 3) return 1.5;
-  if (months === 6) return 3;
-  if (months === 12) return 5;
-  return 0;
-}
-
-function getBillingPricing(
-  monthlyPrice: number,
-  months: BillingDuration
-) {
-  const regularTotal =
-    monthlyPrice * months;
-
-  const discountPercent =
-    getDiscountPercent(months);
-
-  const savings =
-    regularTotal *
-    (discountPercent / 100);
-
-  const total =
-    regularTotal - savings;
-
-  return {
-    regularTotal,
-    discountPercent,
-    savings,
-    total,
-    monthlyEquivalent:
-      total / months,
-  };
-}
-
-function formatBillingMoney(
-  amount: number,
-  currency: string
-): string {
-  try {
-    return new Intl.NumberFormat(
-      "en-GH",
-      {
-        style: "currency",
-        currency,
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 2,
-      }
-    ).format(amount);
-  } catch {
-    return `${amount.toLocaleString("en-GH")} ${currency}`;
-  }
-}
-
 /* ============================================================
    PAGE
 ============================================================ */
@@ -696,9 +621,6 @@ function formatBillingMoney(
 export default function SubscriptionsDetailClient() {
   const router =
     useRouter();
-
-  const searchParams =
-    useSearchParams();
 
   const params =
     useParams<{
@@ -717,19 +639,6 @@ export default function SubscriptionsDetailClient() {
       ? PLANS[
           rawId
         ]
-      : null;
-
-  const billingMonths =
-    parseBillingDuration(
-      searchParams.get("months")
-    );
-
-  const billingPricing =
-    plan
-      ? getBillingPricing(
-          plan.price,
-          billingMonths
-        )
       : null;
 
   const [
@@ -987,7 +896,7 @@ export default function SubscriptionsDetailClient() {
     );
 
   /* ============================================================
-     CHOOSE PLAN
+     SELECT PLAN
   ============================================================ */
 
   async function selectPlan() {
@@ -995,6 +904,7 @@ export default function SubscriptionsDetailClient() {
       db;
 
     if (
+      !firestore ||
       !uid ||
       !plan ||
       selecting ||
@@ -1003,42 +913,17 @@ export default function SubscriptionsDetailClient() {
       return;
     }
 
-    setError(null);
-    setSuccess(null);
+    setSelecting(
+      true
+    );
 
-    if (
-      plan.price > 0
-    ) {
-      const query =
-        new URLSearchParams();
+    setError(
+      null
+    );
 
-      query.set(
-        "plan",
-        plan.id
-      );
-
-      query.set(
-        "months",
-        String(
-          billingMonths
-        )
-      );
-
-      router.push(
-        `/clinics/dashboard/subscriptions/payments?${query.toString()}`
-      );
-
-      return;
-    }
-
-    if (!firestore) {
-      setError(
-        "Firebase is not initialized."
-      );
-      return;
-    }
-
-    setSelecting(true);
+    setSuccess(
+      null
+    );
 
     try {
       await setDoc(
@@ -1051,55 +936,67 @@ export default function SubscriptionsDetailClient() {
           subscription: {
             planId:
               plan.id,
+
             planName:
               plan.name,
+
             status:
-              "active",
+              plan.price ===
+              0
+                ? "active"
+                : "selected",
+
             price:
-              0,
+              plan.price,
+
             currency:
               plan.currency,
+
             billingPeriod:
-              "month",
-            billingMonths:
-              1,
-            discountPercent:
-              0,
-            amountDue:
-              0,
+              plan.billingPeriod,
+
             userLimit:
               plan.userLimit,
+
             selectedAt:
               serverTimestamp(),
-            activatedAt:
-              serverTimestamp(),
+
             updatedAt:
               serverTimestamp(),
           },
+
           meta: {
             updatedAt:
               serverTimestamp(),
           },
         },
         {
-          merge: true,
+          merge:
+            true,
         }
       );
 
       setSuccess(
-        "Free plan activated successfully."
+        plan.price ===
+          0
+          ? `${plan.name} plan activated successfully.`
+          : `${plan.name} plan selected successfully. Payment activation can be connected when the clinic subscription payment flow is ready.`
       );
-    } catch (selectError) {
+    } catch (
+      selectError
+    ) {
       console.error(
-        "[ClinicSubscriptionDetail] Free activation error:",
+        "[ClinicSubscriptionDetail] Select error:",
         selectError
       );
 
       setError(
-        "Unable to activate the Free plan."
+        "Unable to update your clinic subscription plan."
       );
     } finally {
-      setSelecting(false);
+      setSelecting(
+        false
+      );
     }
   }
 
@@ -1415,59 +1312,25 @@ export default function SubscriptionsDetailClient() {
                     {plan.name}
                   </h3>
 
-                  <div className="mt-4">
-                    <div className="flex flex-wrap items-end gap-2">
-                      <span className="text-4xl font-black tracking-tight text-zinc-950 dark:text-white">
-                        {plan.price === 0
-                          ? "Free"
-                          : formatBillingMoney(
-                              billingPricing?.total ||
-                                plan.price,
-                              plan.currency
-                            )}
+                  <div className="mt-4 flex items-end gap-2">
+                    <span className="text-4xl font-black tracking-tight text-zinc-950 dark:text-white">
+                      {formatPrice(
+                        plan.price,
+                        plan.currency
+                      )}
+                    </span>
+
+                    {plan.price > 0 && (
+                      <span className="pb-1 text-xs font-semibold text-zinc-400">
+                        / month
                       </span>
-
-                      {plan.price > 0 && (
-                        <span className="pb-1 text-xs font-semibold text-zinc-400">
-                          {billingMonths === 1
-                            ? "/ month"
-                            : `for ${billingMonths} months`}
-                        </span>
-                      )}
-                    </div>
-
-                    {plan.price > 0 &&
-                      billingMonths > 1 &&
-                      billingPricing && (
-                        <div className="mt-3 flex flex-wrap items-center gap-2">
-                          <span className="text-xs text-zinc-400 line-through">
-                            {formatBillingMoney(
-                              billingPricing.regularTotal,
-                              plan.currency
-                            )}
-                          </span>
-
-                          <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-black text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300">
-                            Save {billingPricing.discountPercent}%
-                          </span>
-
-                          <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-300">
-                            You save{" "}
-                            {formatBillingMoney(
-                              billingPricing.savings,
-                              plan.currency
-                            )}
-                          </span>
-                        </div>
-                      )}
+                    )}
                   </div>
 
                   <p className="mt-4 text-xs leading-5 text-zinc-500">
                     {plan.price === 0
-                      ? "No subscription fee."
-                      : billingMonths === 1
-                      ? "Monthly clinic subscription."
-                      : `${billingMonths}-month clinic subscription with ${billingPricing?.discountPercent || 0}% off.`}
+                      ? "No monthly subscription fee."
+                      : "Monthly clinic subscription. Payment integration can be connected to the activation flow."}
                   </p>
 
                   <div className="mt-4 flex items-center gap-3 rounded-2xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/60">
@@ -1533,7 +1396,7 @@ export default function SubscriptionsDetailClient() {
                   </h3>
 
                   <p className="mt-2 text-xs leading-5 text-zinc-600 dark:text-zinc-400">
-                    Paid plans continue to a payment summary before checkout. The subscription must not be marked as paid until the payment provider confirms the transaction.
+                    The selected plan is attached only to the authenticated clinic document.
                   </p>
                 </div>
 
