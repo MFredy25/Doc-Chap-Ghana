@@ -724,7 +724,7 @@ export default function DashboardClient() {
               </div>
 
               <Link
-                href="/patients/my-account"
+                href="/patients/dashboard/my-account"
                 className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-amber-600 px-4 py-2.5 text-xs font-bold text-white"
               >
                 Complete profile
@@ -951,7 +951,7 @@ export default function DashboardClient() {
                     },
                     {
                       href:
-                        "/patients/my-account",
+                        "/patients/dashboard/my-account",
                       label:
                         "My account",
                       icon:

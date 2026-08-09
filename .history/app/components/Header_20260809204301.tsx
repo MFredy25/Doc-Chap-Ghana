@@ -30,7 +30,6 @@ import {
   Mail,
   Menu,
   Pill,
-  Search,
   Stethoscope,
   UserPlus,
   Users,
@@ -510,9 +509,6 @@ export default function Header() {
 
   const hrefContact =
     "/contact";
-
-  const hrefSearch =
-    "/search";
 
   const hrefSignup =
     "/signup";
@@ -997,17 +993,7 @@ export default function Header() {
   const desktopNav =
     useMemo(
       () => (
-        <nav className="flex min-w-0 items-center justify-center gap-1.5 2xl:gap-2">
-          <NavItem
-            href={
-              hrefSearch
-            }
-            label="Find healthcare"
-            icon={
-              Search
-            }
-          />
-
+        <nav className="flex min-w-0 items-center justify-center gap-2">
           <NavItem
             href={
               hrefPatients
@@ -1069,7 +1055,7 @@ export default function Header() {
   return (
     <>
       <header className="sticky top-0 z-[70] border-b border-gray-200 bg-white/95 shadow-sm backdrop-blur dark:border-gray-800 dark:bg-gray-950/95">
-        <div className="mx-auto flex h-16 w-full items-center gap-2 px-3 sm:gap-3 sm:px-5 lg:px-6">
+        <div className="mx-auto flex h-16 w-full items-center gap-3 px-4 sm:px-5 lg:px-6">
           {/* LOGO */}
 
           <div className="min-w-0 shrink-0">
@@ -1088,11 +1074,11 @@ export default function Header() {
                 height={
                   36
                 }
-                className="h-8 w-8 shrink-0 rounded-xl object-contain sm:h-9 sm:w-9"
+                className="h-9 w-9 shrink-0 rounded-xl object-contain"
                 priority
               />
 
-              <span className="hidden max-w-[135px] truncate text-base font-semibold text-gray-900 dark:text-white sm:block md:max-w-[175px] md:text-lg lg:max-w-[200px]">
+              <span className="hidden max-w-[150px] truncate text-lg font-semibold text-gray-900 dark:text-white sm:block md:max-w-[190px] lg:max-w-[210px]">
                 Doc Chap Ghana
               </span>
             </Link>
@@ -1176,7 +1162,7 @@ export default function Header() {
                   !value
               )
             }
-            className="ml-auto inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 shadow-sm transition hover:bg-gray-100 active:scale-[0.98] xl:hidden dark:border-gray-800 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-800"
+            className="ml-auto inline-flex items-center justify-center rounded-[10px] p-2 text-gray-700 transition hover:bg-gray-100 xl:hidden dark:text-gray-200 dark:hover:bg-gray-800"
             aria-label={
               mobileOpen
                 ? "Close menu"
@@ -1210,7 +1196,7 @@ export default function Header() {
             aria-label="Close menu"
           />
 
-          <div className="absolute right-0 top-0 h-full w-[88%] max-w-sm overflow-y-auto border-l border-gray-200 bg-white shadow-2xl sm:w-[420px] dark:border-gray-700 dark:bg-gray-900">
+          <div className="absolute right-0 top-0 h-full w-[86%] max-w-sm overflow-y-auto border-l border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-900">
             <div className="flex h-16 items-center justify-between border-b border-gray-200 px-4 dark:border-gray-700">
               <span className="font-semibold text-gray-900 dark:text-white">
                 Menu
@@ -1243,7 +1229,7 @@ export default function Header() {
                 </div>
               )}
 
-            <div className="space-y-2.5 p-4 sm:p-5">
+            <div className="space-y-3 p-4">
               <Link
                 href={
                   hrefHome
@@ -1259,21 +1245,6 @@ export default function Header() {
                   Home
                 </span>
               </Link>
-
-              <NavItem
-                href={
-                  hrefSearch
-                }
-                label="Find healthcare"
-                icon={
-                  Search
-                }
-                onClick={() =>
-                  setMobileOpen(
-                    false
-                  )
-                }
-              />
 
               <NavItem
                 href={

@@ -677,7 +677,7 @@ export default function DashboardClient() {
 
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Link
-                  href="/patients/my-account"
+                  href="/patients/dashboard/my-account"
                   className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-bold text-[#063b34] shadow-xl transition hover:bg-emerald-50"
                 >
                   <UserRound className="h-4 w-4" />
@@ -724,7 +724,7 @@ export default function DashboardClient() {
               </div>
 
               <Link
-                href="/patients/my-account"
+                href="/patients/dashboard/my-account"
                 className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-amber-600 px-4 py-2.5 text-xs font-bold text-white"
               >
                 Complete profile
@@ -951,7 +951,7 @@ export default function DashboardClient() {
                     },
                     {
                       href:
-                        "/patients/my-account",
+                        "/patients/dashboard/my-account",
                       label:
                         "My account",
                       icon:
