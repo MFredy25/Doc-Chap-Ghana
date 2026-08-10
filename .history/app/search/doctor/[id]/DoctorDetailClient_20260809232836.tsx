@@ -811,9 +811,9 @@ export default function DoctorDetailClient() {
 
                 {acceptsNewPatients && (
                   <Link
-                    href={`/search/doctor/book-an-appointment?id=${encodeURIComponent(
+                    href={`/book-an-appointment/${encodeURIComponent(
                       doctor.id
-                    )}`}
+                    )}?type=doctor`}
                     className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-3.5 text-sm font-black text-white shadow-sm transition hover:bg-blue-700"
                   >
                     <CalendarDays className="h-4 w-4" />

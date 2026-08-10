@@ -90,7 +90,6 @@ type ApiResponse = {
     status: string;
     providerId: string;
     providerName: string;
-    specialtyName?: string;
     date: string;
     startAt: string;
     endAt: string;
@@ -1079,7 +1078,6 @@ export default function BookAnAppointmentClient() {
           payload.appointment.providerName ||
           provider.name,
         specialty:
-          payload.appointment.specialtyName ||
           provider.specialty,
         date:
           payload.appointment.date,
@@ -1092,58 +1090,6 @@ export default function BookAnAppointmentClient() {
         reason:
           s(reason),
       };
-
-      try {
-        const emailResponse =
-          await fetch(
-            "/api/send-email-doctor-new-appointment",
-            {
-              method:
-                "POST",
-
-              headers: {
-                "content-type":
-                  "application/json",
-
-                authorization:
-                  `Bearer ${token}`,
-              },
-
-              body:
-                JSON.stringify({
-                  appointmentId:
-                    payload.appointment.id,
-
-                  doctorId:
-                    provider.id,
-                }),
-            }
-          );
-
-        const emailPayload =
-          await emailResponse
-            .json()
-            .catch(
-              () => null
-            );
-
-        if (
-          !emailResponse.ok ||
-          !emailPayload?.ok
-        ) {
-          console.warn(
-            "[DoctorBooking] Appointment email notification failed:",
-            emailPayload
-          );
-        }
-      } catch (
-        emailError
-      ) {
-        console.warn(
-          "[DoctorBooking] Appointment email notification error:",
-          emailError
-        );
-      }
 
       window.sessionStorage.setItem(
         "docchapghana:doctor-appointment-confirmed",
