@@ -320,7 +320,7 @@ function PatientSidebarContent({
         label:
           "My account",
         href:
-          "/patients/my-account",
+          "/patients/dashboard/my-account",
         icon:
           UserRound,
         iconClass:
